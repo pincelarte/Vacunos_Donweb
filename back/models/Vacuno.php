@@ -57,4 +57,48 @@ class Vacuno
     {
         return ['Holando Argentino', 'Aberdeen Angus', 'Hereford', 'Jersey'];
     }
+
+    // Usamos 'static' para poder usarlo sin tener que crear una vaca primero [cite: 2026-01-28]
+    public static function listarPorEstablecimiento($id_est)
+    {
+        $conexion = new Conexion();
+        $con = $conexion->conectar();
+
+        // Buscamos las vacas filtrando por el ID del campo [cite: 2026-01-28]
+        $sql = "SELECT * FROM vacunos WHERE id_establecimiento = ?";
+        $stmt = $con->prepare($sql);
+        $stmt->execute([$id_est]);
+
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    // Busca los datos de una sola vaca usando su caravana [cite: 2026-01-28]
+    public static function obtenerPorCaravana($caravana)
+    {
+        $conexion = new Conexion();
+        $con = $conexion->conectar();
+
+        $sql = "SELECT * FROM vacunos WHERE caravana = ?";
+        $stmt = $con->prepare($sql);
+        $stmt->execute([$caravana]);
+
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+
+    // Actualiza los datos de una vaca existente [cite: 2026-01-28]
+    public function actualizar($caravana_id)
+    {
+        $con = $this->db->conectar();
+
+        // UPDATE (Actualizar): Cambiamos los valores donde la caravana coincida [cite: 2026-01-28]
+        $sql = "UPDATE vacunos SET edad = ?, peso_actual = ?, historial = ? WHERE caravana = ?";
+        $stmt = $con->prepare($sql);
+
+        return $stmt->execute([$this->edad, $this->peso, $this->historial, $caravana_id]);
+    }
+
+    public function actualizarHistorial($texto)
+    {
+        $this->historial = $texto;
+    }
 }
