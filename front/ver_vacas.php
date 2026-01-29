@@ -31,6 +31,41 @@ $listaVacas = Vacuno::listarPorEstablecimiento($id_establecimiento);
     <meta charset="UTF-8">
     <title>Vacunos - <?php echo $nombreEst; ?></title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .contenedor-asistente {
+            position: fixed;
+            top: 10px;
+            right: 0;
+            /* Ahora lo pegamos al borde derecho [cite: 2026-01-28] */
+            z-index: 1000;
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+        }
+
+        .img-silicio {
+            width: 300px;
+            height: auto;
+            /* Invertimos la imagen para que mire hacia la izquierda (hacia el texto) [cite: 2026-01-28] */
+            transform: scaleX(-1);
+            filter: drop-shadow(3px 3px 5px rgba(0, 0, 0, 0.3));
+        }
+
+        .burbuja-silicio {
+            background: #ffffff;
+            border: 2px solid #2c3e50;
+            border-radius: 15px;
+            padding: 8px 12px;
+            /* Ajustá este número: mientras más negativo, más se acerca al paisano [cite: 2026-01-28] */
+            margin-right: -55px;
+            max-width: 280px;
+            box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.1);
+            font-size: 0.85rem;
+            position: relative;
+            /* Esto asegura que la burbuja quede por "encima" de la imagen [cite: 2026-01-28] */
+            z-index: 1001;
+        }
+    </style>
 </head>
 
 <body class="bg-light">
@@ -101,12 +136,35 @@ $listaVacas = Vacuno::listarPorEstablecimiento($id_establecimiento);
                                 <a href="editar_vaca.php?caravana=<?php echo $vaca['caravana']; ?>" class="btn btn-sm btn-warning">
                                     Editar
                                 </a>
+
+                                <a href="../back/controllers/VacunoController.php?accion=eliminar&caravana=<?php echo $vaca['caravana']; ?>&id_est=<?php echo $id_establecimiento; ?>"
+                                    class="btn btn-sm btn-danger"
+                                    onclick="return confirm('¿Seguro que quiere sacar este animal del sistema?')">
+                                    Eliminar
+                                </a>
+                            </td>
                             </td>
                         </tr>
                     <?php endforeach; ?>
                 <?php endif; ?>
             </tbody>
         </table>
+    </div>
+    <div class="contenedor-asistente">
+        <div class="burbuja-silicio">
+            <b>Don Silicio dice:</b><br>
+
+            <?php if (empty($listaVacas)): ?>
+                ¡Buenas <?php echo ucfirst($_SESSION['usuario']); ?>!
+                Aún no tengo nada de ganado anotado en mi cuaderno.
+
+            <?php else: ?>
+                ¡Vea, amigo <?php echo ucfirst($_SESSION['usuario']); ?>!
+                Aquí tenemos el detalle de nuestra hacienda.
+            <?php endif; ?>
+
+        </div>
+        <img src="assets/img/DonSilicio-indice.png" class="img-silicio" alt="Don Silicio">
     </div>
 </body>
 

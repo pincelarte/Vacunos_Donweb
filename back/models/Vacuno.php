@@ -101,4 +101,15 @@ class Vacuno
     {
         $this->historial = $texto;
     }
+
+    public static function eliminar($caravana)
+    {
+        $db = (new Conexion())->conectar(); // Abrimos conexión [cite: 2026-01-28]
+
+        // Comando: DELETE FROM (Borrar de) la tabla vacunos [cite: 2026-01-28]
+        $stmt = $db->prepare("DELETE FROM vacunos WHERE caravana = :caravana");
+        $stmt->bindParam(':caravana', $caravana);
+
+        return $stmt->execute(); // Devuelve verdadero si lo borró con éxito [cite: 2026-01-28]
+    }
 }
