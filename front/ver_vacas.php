@@ -71,7 +71,7 @@ $exito = $_GET['exito'] ?? null;
 
 <body class="bg-light">
     <div class="container mt-4">
-        <h1>Vacunos en: <?php echo $nombreEst; ?></h1>
+        <h1><?php echo $nombreEst; ?></h1>
         <a href="gestion.php" class="btn btn-secondary mb-3">Volver a Gestión</a>
         <hr>
 

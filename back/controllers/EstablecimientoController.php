@@ -1,22 +1,29 @@
 <?php
 require_once __DIR__ . '/../models/Establecimiento.php';
+$modelo = new Establecimiento();
 
-// Verificamos si los datos vienen por el método POST (envío de formulario) [cite: 2026-01-28]
+// BLOQUE 1: Para Guardar (Método POST) [cite: 2026-01-28]
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-
-    // Guardamos lo que escribió el usuario en variables [cite: 2026-01-28]
     $nombre = $_POST['nombre_est'];
     $ubicacion = $_POST['ubicacion_est'];
 
-    // Creamos el objeto del modelo que ya tenés listo [cite: 2026-01-28]
-    $modelo = new Establecimiento();
-
-    // Intentamos crear el registro [cite: 2026-01-28]
     if ($modelo->crear($nombre, $ubicacion)) {
-        // header (encabezado) / Location (ubicación): lo devuelve a la gestión [cite: 2026-01-28]
         header("Location: ../../front/gestion.php?mensaje=ok");
         exit();
     } else {
         echo "Hubo un error al guardar.";
     }
+}
+
+// BLOQUE 2: Para Eliminar (Método GET) [cite: 2026-01-28]
+// Fíjate que este bloque está AFUERA de las llaves del POST [cite: 2026-01-24]
+if (isset($_GET['accion']) && $_GET['accion'] === 'eliminar') {
+    $id = $_GET['id'];
+
+    if ($modelo->eliminar($id)) {
+        header("Location: ../../front/gestion.php?mensaje=eliminado");
+    } else {
+        header("Location: ../../front/gestion.php?mensaje=error");
+    }
+    exit();
 }

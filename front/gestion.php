@@ -32,10 +32,10 @@ $listaEstablecimientos = $modelo->listarTodo();
             <div class="card-body">
                 <form action="../back/controllers/EstablecimientoController.php" method="POST" class="row g-3">
                     <div class="col-md-5">
-                        <input type="text" name="nombre_est" class="form-control" placeholder="Nombre" required>
+                        <input type="text" name="nombre_est" class="form-control" placeholder="Establecimiento (máx. 20 letras)" maxlength="20" required>
                     </div>
                     <div class="col-md-5">
-                        <input type="text" name="ubicacion_est" class="form-control" placeholder="Ubicación" required>
+                        <input type="text" name="ubicacion_est" class="form-control" placeholder="Ubicación (máx. 20 letras)" maxlength="20" required>
                     </div>
                     <div class="col-md-2">
                         <button type="submit" class="btn btn-primary w-100">Guardar</button>
@@ -47,28 +47,60 @@ $listaEstablecimientos = $modelo->listarTodo();
         <table class="table table-striped bg-white shadow-sm">
             <thead class="table-dark">
                 <tr>
-                    <th>ID</th>
-                    <th>Nombre</th>
-                    <th>Ubicación</th>
-                    <th>Acción</th>
+                    <th class="text-center">ID</th>
+                    <th class="text-center">Nombre</th>
+                    <th class="text-center">Ubicación</th>
+                    <th class="text-center">Acción</th>
                 </tr>
             </thead>
             <tbody>
                 <?php foreach ($listaEstablecimientos as $est): ?>
                     <tr>
-                        <td><?php echo $est['id']; ?></td>
-                        <td><?php echo $est['nombre']; ?></td>
-                        <td><?php echo $est['ubicacion']; ?></td>
-                        <td>
-                            <a href="ver_vacas.php?id=<?php echo $est['id']; ?>" class="btn btn-sm btn-success">
-                                Seleccionar
-                            </a>
+                        <td class="text-center"><?php echo $est['id']; ?></td>
+                        <td class="text-center"><?php echo $est['nombre']; ?></td>
+                        <td class="text-center"><?php echo $est['ubicacion']; ?></td>
+                        <td class="text-center">
+                            <div class="btn-group">
+                                <a href="ver_vacas.php?id=<?php echo $est['id']; ?>" class="btn btn-sm btn-success">Seleccionar</a>
+
+                                <button type="button" class="btn btn-sm btn-secondary dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown" aria-expanded="false">
+                                    ⚙️
+                                </button>
+
+                                <ul class="dropdown-menu shadow">
+                                    <li>
+                                        <a class="dropdown-item" href="editar_establecimiento.php?id=<?php echo $est['id']; ?>">✏️ Editar</a>
+                                    </li>
+                                    <li>
+                                        <hr class="dropdown-divider">
+                                    </li>
+                                    <li>
+                                        <button class="dropdown-item text-danger" onclick="confirmarBorrado(<?php echo $est['id']; ?>, '<?php echo $est['nombre']; ?>')">
+                                            🗑️ Borrar
+                                        </button>
+                                    </li>
+                                </ul>
+                            </div>
                         </td>
                     </tr>
                 <?php endforeach; ?>
             </tbody>
         </table>
     </div>
+    <script>
+        function confirmarBorrado(id, nombre) {
+            // Pedimos al usuario que escriba 'borrar' para confirmar [cite: 2026-01-24]
+            let confirmacion = prompt("Para eliminar el establecimiento '" + nombre + "', escriba 'borrar':");
+
+            if (confirmacion === 'borrar') {
+                // Si escribió bien, lo mandamos al controlador [cite: 2026-01-28]
+                window.location.href = "../back/controllers/EstablecimientoController.php?accion=eliminar&id=" + id;
+            } else if (confirmacion !== null) {
+                alert("Palabra incorrecta. No se eliminó el establecimiento.");
+            }
+        }
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 
 </html>
