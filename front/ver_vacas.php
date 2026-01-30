@@ -22,6 +22,9 @@ $datosEst = $modeloEst->obtenerPorId($id_establecimiento);
 $nombreEst = $datosEst['nombre'] ?? 'Desconocido';
 
 $listaVacas = Vacuno::listarPorEstablecimiento($id_establecimiento);
+
+$error = $_GET['error'] ?? null;
+$exito = $_GET['exito'] ?? null;
 ?>
 
 <!DOCTYPE html>
@@ -33,10 +36,10 @@ $listaVacas = Vacuno::listarPorEstablecimiento($id_establecimiento);
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         .contenedor-asistente {
-            position: fixed;
+            position: absolute;
+            /* Cambiamos fixed por absolute para que NO baje con el scroll [cite: 2026-01-28] */
             top: 10px;
             right: 0;
-            /* Ahora lo pegamos al borde derecho [cite: 2026-01-28] */
             z-index: 1000;
             display: flex;
             flex-direction: row;
@@ -46,7 +49,6 @@ $listaVacas = Vacuno::listarPorEstablecimiento($id_establecimiento);
         .img-silicio {
             width: 300px;
             height: auto;
-            /* Invertimos la imagen para que mire hacia la izquierda (hacia el texto) [cite: 2026-01-28] */
             transform: scaleX(-1);
             filter: drop-shadow(3px 3px 5px rgba(0, 0, 0, 0.3));
         }
@@ -56,13 +58,12 @@ $listaVacas = Vacuno::listarPorEstablecimiento($id_establecimiento);
             border: 2px solid #2c3e50;
             border-radius: 15px;
             padding: 8px 12px;
-            /* Ajustá este número: mientras más negativo, más se acerca al paisano [cite: 2026-01-28] */
             margin-right: -55px;
+            /* Esto lo acerca al paisano como lo tenías antes [cite: 2026-01-28] */
             max-width: 280px;
             box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.1);
             font-size: 0.85rem;
             position: relative;
-            /* Esto asegura que la burbuja quede por "encima" de la imagen [cite: 2026-01-28] */
             z-index: 1001;
         }
     </style>
@@ -131,7 +132,13 @@ $listaVacas = Vacuno::listarPorEstablecimiento($id_establecimiento);
                             <td><?php echo $vaca['raza']; ?></td>
                             <td><?php echo $vaca['edad']; ?> m</td>
                             <td><?php echo $vaca['peso_actual']; ?> kg</td>
-                            <td><small><?php echo $vaca['historial'] ?: 'Sin datos'; ?></small></td>
+                            <td class="text-center">
+                                <?php if (!empty($vaca['historial'])): ?>
+                                    <a href="editar_vaca.php?caravana=<?php echo $vaca['caravana']; ?>" style="text-decoration: none;">🔍</a>
+                                <?php else: ?>
+                                    <small class="text-muted">Sin datos</small>
+                                <?php endif; ?>
+                            </td>
                             <td>
                                 <a href="editar_vaca.php?caravana=<?php echo $vaca['caravana']; ?>" class="btn btn-sm btn-warning">
                                     Editar
@@ -143,7 +150,6 @@ $listaVacas = Vacuno::listarPorEstablecimiento($id_establecimiento);
                                     Eliminar
                                 </a>
                             </td>
-                            </td>
                         </tr>
                     <?php endforeach; ?>
                 <?php endif; ?>
@@ -154,15 +160,24 @@ $listaVacas = Vacuno::listarPorEstablecimiento($id_establecimiento);
         <div class="burbuja-silicio">
             <b>Don Silicio dice:</b><br>
 
-            <?php if (empty($listaVacas)): ?>
-                ¡Buenas <?php echo ucfirst($_SESSION['usuario']); ?>!
-                Aún no tengo nada de ganado anotado en mi cuaderno.
-
+            <?php if ($error === 'duplicado'): ?>
+                <span style="color: red;"><b>¡Epa, amigo!</b></span> Ese número de caravana ya lo tenemos anotado.
+            <?php elseif ($error === 'peso_bajo'): ?>
+                <span style="color: red;"><b>¡Atención!</b></span> ¿Seguro que pesa menos de 10 kg? Revise la balanza.
+            <?php elseif ($exito === 'creado'): ?>
+                <span style="color: green;"><b>¡Lindo ejemplar!</b></span> Ya anoté al nuevo vacuno en el cuaderno.
+            <?php elseif ($exito === 'editado'): ?>
+                <span style="color: blue;"><b>¡Listo!</b></span> Ya actualicé los datos del animal como pidió.
+            <?php elseif ($exito === 'eliminado'): ?>
+                <span style="color: orange;"><b>¡Despachado!</b></span> El animal ya no figura más en nuestro cuaderno.
+            <?php elseif (empty($listaVacas)): ?>
+                ¡Buenas <?php echo ucfirst($_SESSION['usuario']); ?>! Aún no tengo nada de ganado anotado en mi cuaderno.
+            <?php elseif ($error === 'peso_alto'): ?>
+                <span style="color: red;"><b>¡Epa, amigo!</b></span><br>
+                ¡Ese animal es un gigante! ¡Saque el pie de la balanza y vuelva a pesar!!!
             <?php else: ?>
-                ¡Vea, amigo <?php echo ucfirst($_SESSION['usuario']); ?>!
-                Aquí tenemos el detalle de nuestra hacienda.
+                ¡Vea, amigo <?php echo ucfirst($_SESSION['usuario']); ?>! Aquí tenemos el detalle de nuestra hacienda.
             <?php endif; ?>
-
         </div>
         <img src="assets/img/DonSilicio-indice.png" class="img-silicio" alt="Don Silicio">
     </div>

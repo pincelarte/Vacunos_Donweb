@@ -112,4 +112,21 @@ class Vacuno
 
         return $stmt->execute(); // Devuelve verdadero si lo borró con éxito [cite: 2026-01-28]
     }
+
+    public static function existe($caravana)
+    {
+        // Abrimos la conexión con la base de datos [cite: 2026-01-28]
+        $db = (new Conexion())->conectar();
+
+        // Preparamos la consulta para contar si esa caravana ya figura [cite: 2026-01-28]
+        $stmt = $db->prepare("SELECT COUNT(*) FROM vacunos WHERE caravana = :caravana");
+        $stmt->bindParam(':caravana', $caravana);
+        $stmt->execute();
+
+        // fetchColumn() nos devuelve el número directamente [cite: 2026-01-28]
+        $cantidad = $stmt->fetchColumn();
+
+        // Si es mayor a 0, significa que ya existe [cite: 2026-01-28]
+        return $cantidad > 0;
+    }
 }
