@@ -1,14 +1,50 @@
 <?php
 require_once __DIR__ . '/../models/Vacuno.php';
 
+/**
+ * Función helper para sanitizar entradas y prevenir XSS
+ */
+function sanitizeInput($data)
+{
+    return htmlspecialchars(trim($data), ENT_QUOTES, 'UTF-8');
+}
+
+/**
+ * Función helper para redirigir de forma segura
+ */
+function safeRedirectVerVacas($id_est, $mensaje)
+{
+    $mensajesPermitidos = ['eliminado', 'creado', 'editado', 'error', 'peso_bajo', 'peso_alto', 'duplicado'];
+    $msg = in_array($mensaje, $mensajesPermitidos) ? $mensaje : 'error';
+    $id = filter_var($id_est, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]);
+    if ($id) {
+        header("Location: ../../front/ver_vacas.php?id=" . $id . "&" . ($msg === 'error' ? 'error=general' : $msg . '=1'));
+        exit();
+    }
+    // Si el ID no es válido, redirigir a gestión
+    header("Location: ../../front/gestion.php?mensaje=error");
+    exit();
+}
+
 // 1. Lógica para ELIMINAR
 if (isset($_GET['accion']) && $_GET['accion'] == 'eliminar') {
-    $caravana = $_GET['caravana'];
-    $id_est = $_GET['id_est'];
+    // Validar que existan los parámetros necesarios
+    if (!isset($_GET['caravana']) || !isset($_GET['id_est'])) {
+        header("Location: ../../front/gestion.php?mensaje=error");
+        exit();
+    }
+
+    // Sanitizar inputs
+    $caravana = sanitizeInput($_GET['caravana']);
+    $id_est = filter_var($_GET['id_est'], FILTER_VALIDATE_INT);
+
+    if (!$id_est || empty($caravana)) {
+        header("Location: ../../front/gestion.php?mensaje=error");
+        exit();
+    }
 
     if (Vacuno::eliminar($caravana)) {
-        header("Location: ../../front/ver_vacas.php?id=" . $id_est . "&exito=eliminado");
-        exit();
+        safeRedirectVerVacas($id_est, 'eliminado');
     } else {
         echo "Error al intentar despachar al animal.";
         exit();
@@ -17,48 +53,77 @@ if (isset($_GET['accion']) && $_GET['accion'] == 'eliminar') {
 
 // 2. Lógica para CREAR o EDITAR
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $accion = $_POST['accion'] ?? 'crear';
-    $id_est = (int)$_POST['id_establecimiento'];
+    // Validar que exista id_establecimiento
+    if (!isset($_POST['id_establecimiento'])) {
+        header("Location: ../../front/gestion.php?mensaje=error");
+        exit();
+    }
+
+    $accion = isset($_POST['accion']) ? $_POST['accion'] : 'crear';
+    $id_est = filter_var($_POST['id_establecimiento'], FILTER_VALIDATE_INT);
+
+    if (!$id_est) {
+        safeRedirectVerVacas(0, 'error');
+    }
 
     if ($accion === 'editar') {
-        $caravana_original = $_POST['caravana_original'];
+        // Validar campos requeridos para editar
+        if (!isset($_POST['caravana_original']) || !isset($_POST['peso']) || !isset($_POST['edad'])) {
+            safeRedirectVerVacas($id_est, 'error');
+        }
+
+        $caravana_original = sanitizeInput($_POST['caravana_original']);
         $peso = (float)$_POST['peso'];
+        $edad = (int)$_POST['edad'];
 
         // Seguridad para EDITAR [cite: 2026-01-28]
         if ($peso < 10) {
-            header("Location: ../../front/ver_vacas.php?id=" . $id_est . "&error=peso_bajo");
-            exit();
+            safeRedirectVerVacas($id_est, 'peso_bajo');
         } elseif ($peso > 999) {
-            header("Location: ../../front/ver_vacas.php?id=" . $id_est . "&error=peso_alto");
-            exit();
+            safeRedirectVerVacas($id_est, 'peso_alto');
         }
 
-        $vaca = new Vacuno("", $caravana_original, "", (int)$_POST['edad'], $peso, $id_est);
-        $vaca->actualizarHistorial($_POST['historial']);
+        // Validar edad razonable
+        if ($edad < 0 || $edad > 30) {
+            safeRedirectVerVacas($id_est, 'error');
+        }
+
+        // Sanitizar historial
+        $historial = isset($_POST['historial']) ? sanitizeInput($_POST['historial']) : '';
+
+        $vaca = new Vacuno("", $caravana_original, "", $edad, $peso, $id_est);
+        $vaca->actualizarHistorial($historial);
 
         if ($vaca->actualizar($caravana_original)) {
-            header("Location: ../../front/ver_vacas.php?id=" . $id_est . "&exito=editado");
-            exit();
+            safeRedirectVerVacas($id_est, 'editado');
         }
     } else {
         // --- LÓGICA DE CREAR CON QA --- [cite: 2026-01-28]
-        $caravana = $_POST['caravana'];
+        // Validar campos requeridos
+        if (!isset($_POST['caravana']) || !isset($_POST['peso']) || !isset($_POST['tipo'])) {
+            safeRedirectVerVacas($id_est, 'error');
+        }
+
+        $caravana = sanitizeInput($_POST['caravana']);
         $peso = (float)$_POST['peso'];
+        $tipo = sanitizeInput($_POST['tipo']);
+        $raza = isset($_POST['raza']) ? sanitizeInput($_POST['raza']) : '';
+
+        // Validar datos
+        if (empty($caravana)) {
+            safeRedirectVerVacas($id_est, 'error');
+        }
 
         if (Vacuno::existe($caravana)) {
-            header("Location: ../../front/ver_vacas.php?id=" . $id_est . "&error=duplicado");
-            exit();
+            safeRedirectVerVacas($id_est, 'duplicado');
         } elseif ($peso < 10) {
-            header("Location: ../../front/ver_vacas.php?id=" . $id_est . "&error=peso_bajo");
-            exit();
+            safeRedirectVerVacas($id_est, 'peso_bajo');
         } elseif ($peso > 999) {
-            header("Location: ../../front/ver_vacas.php?id=" . $id_est . "&error=peso_alto");
-            exit();
+            safeRedirectVerVacas($id_est, 'peso_alto');
         } else {
-            $vaca = new Vacuno($_POST['tipo'], $caravana, $_POST['raza'], 0, $peso, $id_est);
+            $vaca = new Vacuno($tipo, $caravana, $raza, 0, $peso, $id_est);
             if ($vaca->insertar()) {
-                header("Location: ../../front/ver_vacas.php?id=" . $id_est . "&exito=creado");
-                exit();
+                safeRedirectVerVacas($id_est, 'creado');
             }
         }
     }

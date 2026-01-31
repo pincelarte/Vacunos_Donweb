@@ -1,14 +1,37 @@
 <?php
 session_start();
+
+/**
+ * Configuración de seguridad de sesión
+ */
+ini_set('session.cookie_httponly', 1);
+
 if (!isset($_SESSION['usuario'])) {
     header("Location: index.php");
     exit();
 }
 
-$id_establecimiento = $_GET['id'] ?? null;
+/**
+ * Función helper para escapar HTML y prevenir XSS
+ */
+function escapeHtml($data)
+{
+    return htmlspecialchars($data ?? '', ENT_QUOTES, 'UTF-8');
+}
+
+// Validar y sanitizar el ID del establecimiento
+$id_establecimiento = null;
+if (isset($_GET['id'])) {
+    $id_establecimiento = filter_var($_GET['id'], FILTER_VALIDATE_INT);
+    if (!$id_establecimiento || $id_establecimiento < 1) {
+        // Si el ID no es válido, redirigir a gestión
+        header("Location: gestion.php?mensaje=error");
+        exit();
+    }
+}
 
 if (!$id_establecimiento) {
-    echo "No se seleccionó ningún establecimiento.";
+    header("Location: gestion.php?mensaje=error");
     exit();
 }
 
@@ -23,8 +46,43 @@ $nombreEst = $datosEst['nombre'] ?? 'Desconocido';
 
 $listaVacas = Vacuno::listarPorEstablecimiento($id_establecimiento);
 
-$error = $_GET['error'] ?? null;
-$exito = $_GET['exito'] ?? null;
+// Validar y sanitizar mensajes de error/exito con lista blanca
+$erroresValidos = ['duplicado', 'peso_bajo', 'peso_alto', 'general'];
+$exitosValidos = ['creado', 'editado', 'eliminado'];
+
+$error = null;
+$exito = null;
+
+if (isset($_GET['error']) && in_array($_GET['error'], $erroresValidos)) {
+    $error = $_GET['error'];
+}
+
+if (isset($_GET['exito']) && in_array($_GET['exito'], $exitosValidos)) {
+    $exito = $_GET['exito'];
+}
+
+// Escapar nombre del establecimiento para el título
+$nombreEstSafe = escapeHtml($nombreEst);
+
+// Mensajes del asistente Don Silicio (ya escapados)
+$mensajeSilicio = '';
+if ($error === 'duplicado') {
+    $mensajeSilicio = '<span style="color: red;"><b>¡Epa, amigo!</b></span> Ese número de caravana ya lo tenemos anotado.';
+} elseif ($error === 'peso_bajo') {
+    $mensajeSilicio = '<span style="color: red;"><b>¡Atención!</b></span> ¿Seguro que pesa menos de 10 kg? Revise la balanza.';
+} elseif ($error === 'peso_alto') {
+    $mensajeSilicio = '<span style="color: red;"><b>¡Epa, amigo!</b></span><br>¡Ese animal es un gigante! ¡Saque el pie de la balanza y vuelva a pesar!!!';
+} elseif ($exito === 'creado') {
+    $mensajeSilicio = '<span style="color: green;"><b>¡Lindo ejemplar!</b></span> Ya anoté al nuevo vacuno en el cuaderno.';
+} elseif ($exito === 'editado') {
+    $mensajeSilicio = '<span style="color: blue;"><b>¡Listo!</b></span> Ya actualicé los datos del animal como pidió.';
+} elseif ($exito === 'eliminado') {
+    $mensajeSilicio = '<span style="color: orange;"><b>¡Despachado!</b></span> El animal ya no figura más en nuestro cuaderno.';
+} elseif (empty($listaVacas)) {
+    $mensajeSilicio = '¡Buenas ' . ucfirst(escapeHtml($_SESSION['usuario'])) . '! Aún no tengo nada de ganado anotado en mi cuaderno.';
+} else {
+    $mensajeSilicio = '¡Vea, amigo ' . ucfirst(escapeHtml($_SESSION['usuario'])) . '! Aquí tenemos el detalle de nuestra hacienda.';
+}
 ?>
 
 <!DOCTYPE html>
@@ -32,7 +90,7 @@ $exito = $_GET['exito'] ?? null;
 
 <head>
     <meta charset="UTF-8">
-    <title>Vacunos - <?php echo $nombreEst; ?></title>
+    <title>Vacunos - <?php echo $nombreEstSafe; ?></title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         .contenedor-asistente {
@@ -71,7 +129,7 @@ $exito = $_GET['exito'] ?? null;
 
 <body class="bg-light">
     <div class="container mt-4">
-        <h1><?php echo $nombreEst; ?></h1>
+        <h1><?php echo $nombreEstSafe; ?></h1>
         <a href="gestion.php" class="btn btn-secondary mb-3">Volver a Gestión</a>
         <hr>
 
@@ -81,24 +139,24 @@ $exito = $_GET['exito'] ?? null;
                 <form action="../back/controllers/VacunoController.php" method="POST" class="row g-2">
                     <input type="hidden" name="id_establecimiento" value="<?php echo $id_establecimiento; ?>">
                     <div class="col-md-2">
-                        <input type="text" name="caravana" class="form-control" placeholder="Caravana" required>
+                        <input type="text" name="caravana" class="form-control" placeholder="Caravana" required pattern="[A-Za-z0-9]{1,20}" title="Solo letras y números">
                     </div>
                     <div class="col-md-2">
                         <select name="tipo" class="form-select">
                             <?php foreach (Vacuno::getTipos() as $t): ?>
-                                <option value="<?php echo $t; ?>"><?php echo $t; ?></option>
+                                <option value="<?php echo escapeHtml($t); ?>"><?php echo escapeHtml($t); ?></option>
                             <?php endforeach; ?>
                         </select>
                     </div>
                     <div class="col-md-3">
                         <select name="raza" class="form-select">
                             <?php foreach (Vacuno::getRazas() as $r): ?>
-                                <option value="<?php echo $r; ?>"><?php echo $r; ?></option>
+                                <option value="<?php echo escapeHtml($r); ?>"><?php echo escapeHtml($r); ?></option>
                             <?php endforeach; ?>
                         </select>
                     </div>
                     <div class="col-md-2">
-                        <input type="number" name="peso" class="form-control" placeholder="Peso (kg)">
+                        <input type="number" name="peso" class="form-control" placeholder="Peso (kg)" min="10" max="999" required>
                     </div>
                     <div class="col-md-3">
                         <button type="submit" class="btn btn-primary w-100">Guardar</button>
@@ -127,24 +185,24 @@ $exito = $_GET['exito'] ?? null;
                 <?php else: ?>
                     <?php foreach ($listaVacas as $vaca): ?>
                         <tr>
-                            <td><?php echo $vaca['caravana']; ?></td>
-                            <td><?php echo $vaca['tipo']; ?></td>
-                            <td><?php echo $vaca['raza']; ?></td>
-                            <td><?php echo $vaca['edad']; ?> m</td>
-                            <td><?php echo $vaca['peso_actual']; ?> kg</td>
+                            <td><?php echo escapeHtml($vaca['caravana']); ?></td>
+                            <td><?php echo escapeHtml($vaca['tipo']); ?></td>
+                            <td><?php echo escapeHtml($vaca['raza']); ?></td>
+                            <td><?php echo escapeHtml($vaca['edad']); ?> m</td>
+                            <td><?php echo escapeHtml($vaca['peso_actual']); ?> kg</td>
                             <td class="text-center">
                                 <?php if (!empty($vaca['historial'])): ?>
-                                    <a href="editar_vaca.php?caravana=<?php echo $vaca['caravana']; ?>" style="text-decoration: none;">🔍</a>
+                                    <a href="editar_vaca.php?caravana=<?php echo urlencode($vaca['caravana']); ?>" style="text-decoration: none;">🔍</a>
                                 <?php else: ?>
                                     <small class="text-muted">Sin datos</small>
                                 <?php endif; ?>
                             </td>
                             <td>
-                                <a href="editar_vaca.php?caravana=<?php echo $vaca['caravana']; ?>" class="btn btn-sm btn-warning">
+                                <a href="editar_vaca.php?caravana=<?php echo urlencode($vaca['caravana']); ?>" class="btn btn-sm btn-warning">
                                     Editar
                                 </a>
 
-                                <a href="../back/controllers/VacunoController.php?accion=eliminar&caravana=<?php echo $vaca['caravana']; ?>&id_est=<?php echo $id_establecimiento; ?>"
+                                <a href="../back/controllers/VacunoController.php?accion=eliminar&caravana=<?php echo urlencode($vaca['caravana']); ?>&id_est=<?php echo $id_establecimiento; ?>"
                                     class="btn btn-sm btn-danger"
                                     onclick="return confirm('¿Seguro que quiere sacar este animal del sistema?')">
                                     Eliminar
@@ -159,25 +217,7 @@ $exito = $_GET['exito'] ?? null;
     <div class="contenedor-asistente">
         <div class="burbuja-silicio">
             <b>Don Silicio dice:</b><br>
-
-            <?php if ($error === 'duplicado'): ?>
-                <span style="color: red;"><b>¡Epa, amigo!</b></span> Ese número de caravana ya lo tenemos anotado.
-            <?php elseif ($error === 'peso_bajo'): ?>
-                <span style="color: red;"><b>¡Atención!</b></span> ¿Seguro que pesa menos de 10 kg? Revise la balanza.
-            <?php elseif ($exito === 'creado'): ?>
-                <span style="color: green;"><b>¡Lindo ejemplar!</b></span> Ya anoté al nuevo vacuno en el cuaderno.
-            <?php elseif ($exito === 'editado'): ?>
-                <span style="color: blue;"><b>¡Listo!</b></span> Ya actualicé los datos del animal como pidió.
-            <?php elseif ($exito === 'eliminado'): ?>
-                <span style="color: orange;"><b>¡Despachado!</b></span> El animal ya no figura más en nuestro cuaderno.
-            <?php elseif (empty($listaVacas)): ?>
-                ¡Buenas <?php echo ucfirst($_SESSION['usuario']); ?>! Aún no tengo nada de ganado anotado en mi cuaderno.
-            <?php elseif ($error === 'peso_alto'): ?>
-                <span style="color: red;"><b>¡Epa, amigo!</b></span><br>
-                ¡Ese animal es un gigante! ¡Saque el pie de la balanza y vuelva a pesar!!!
-            <?php else: ?>
-                ¡Vea, amigo <?php echo ucfirst($_SESSION['usuario']); ?>! Aquí tenemos el detalle de nuestra hacienda.
-            <?php endif; ?>
+            <?php echo $mensajeSilicio; ?>
         </div>
         <img src="assets/img/DonSilicio-indice.png" class="img-silicio" alt="Don Silicio">
     </div>
