@@ -43,6 +43,16 @@ $listaEstablecimientos = $modelo->listarTodo();
                 </form>
             </div>
         </div>
+        <?php if (isset($_GET['mensaje'])): ?>
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                <?php
+                if ($_GET['mensaje'] == 'eliminado') echo "✅ El establecimiento fue borrado.";
+                if ($_GET['mensaje'] == 'ok') echo "💾 Guardado con éxito.";
+                if ($_GET['mensaje'] == 'error') echo "❌ Hubo un error.";
+                ?>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        <?php endif; ?>
 
         <table class="table table-striped bg-white shadow-sm">
             <thead class="table-dark">
