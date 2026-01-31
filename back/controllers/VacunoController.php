@@ -11,14 +11,18 @@ function sanitizeInput($data)
 
 /**
  * Función helper para redirigir de forma segura
+ * Mantiene compatibilidad con el diseño de Don Silicio
  */
-function safeRedirectVerVacas($id_est, $mensaje)
+function safeRedirectVerVacas($id_est, $tipo, $valor = null)
 {
-    $mensajesPermitidos = ['eliminado', 'creado', 'editado', 'error', 'peso_bajo', 'peso_alto', 'duplicado'];
-    $msg = in_array($mensaje, $mensajesPermitidos) ? $mensaje : 'error';
     $id = filter_var($id_est, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]);
     if ($id) {
-        header("Location: ../../front/ver_vacas.php?id=" . $id . "&" . ($msg === 'error' ? 'error=general' : $msg . '=1'));
+        // Usar formato original: &exito=creado o &error=peso_bajo
+        if ($valor !== null) {
+            header("Location: ../../front/ver_vacas.php?id=" . $id . "&" . $tipo . "=" . $valor);
+        } else {
+            header("Location: ../../front/ver_vacas.php?id=" . $id . "&" . $tipo . "=1");
+        }
         exit();
     }
     // Si el ID no es válido, redirigir a gestión
@@ -44,7 +48,7 @@ if (isset($_GET['accion']) && $_GET['accion'] == 'eliminar') {
     }
 
     if (Vacuno::eliminar($caravana)) {
-        safeRedirectVerVacas($id_est, 'eliminado');
+        safeRedirectVerVacas($id_est, 'exito', 'eliminado');
     } else {
         echo "Error al intentar despachar al animal.";
         exit();
@@ -63,13 +67,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $id_est = filter_var($_POST['id_establecimiento'], FILTER_VALIDATE_INT);
 
     if (!$id_est) {
-        safeRedirectVerVacas(0, 'error');
+        safeRedirectVerVacas(0, 'error', 'general');
     }
 
     if ($accion === 'editar') {
         // Validar campos requeridos para editar
         if (!isset($_POST['caravana_original']) || !isset($_POST['peso']) || !isset($_POST['edad'])) {
-            safeRedirectVerVacas($id_est, 'error');
+            safeRedirectVerVacas($id_est, 'error', 'general');
         }
 
         $caravana_original = sanitizeInput($_POST['caravana_original']);
@@ -78,14 +82,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         // Seguridad para EDITAR [cite: 2026-01-28]
         if ($peso < 10) {
-            safeRedirectVerVacas($id_est, 'peso_bajo');
+            safeRedirectVerVacas($id_est, 'error', 'peso_bajo');
         } elseif ($peso > 999) {
-            safeRedirectVerVacas($id_est, 'peso_alto');
+            safeRedirectVerVacas($id_est, 'error', 'peso_alto');
         }
 
         // Validar edad razonable
         if ($edad < 0 || $edad > 30) {
-            safeRedirectVerVacas($id_est, 'error');
+            safeRedirectVerVacas($id_est, 'error', 'general');
         }
 
         // Sanitizar historial
@@ -95,13 +99,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $vaca->actualizarHistorial($historial);
 
         if ($vaca->actualizar($caravana_original)) {
-            safeRedirectVerVacas($id_est, 'editado');
+            safeRedirectVerVacas($id_est, 'exito', 'editado');
         }
     } else {
         // --- LÓGICA DE CREAR CON QA --- [cite: 2026-01-28]
         // Validar campos requeridos
         if (!isset($_POST['caravana']) || !isset($_POST['peso']) || !isset($_POST['tipo'])) {
-            safeRedirectVerVacas($id_est, 'error');
+            safeRedirectVerVacas($id_est, 'error', 'general');
         }
 
         $caravana = sanitizeInput($_POST['caravana']);
@@ -111,19 +115,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         // Validar datos
         if (empty($caravana)) {
-            safeRedirectVerVacas($id_est, 'error');
+            safeRedirectVerVacas($id_est, 'error', 'general');
         }
 
         if (Vacuno::existe($caravana)) {
-            safeRedirectVerVacas($id_est, 'duplicado');
+            safeRedirectVerVacas($id_est, 'error', 'duplicado');
         } elseif ($peso < 10) {
-            safeRedirectVerVacas($id_est, 'peso_bajo');
+            safeRedirectVerVacas($id_est, 'error', 'peso_bajo');
         } elseif ($peso > 999) {
-            safeRedirectVerVacas($id_est, 'peso_alto');
+            safeRedirectVerVacas($id_est, 'error', 'peso_alto');
         } else {
             $vaca = new Vacuno($tipo, $caravana, $raza, 0, $peso, $id_est);
             if ($vaca->insertar()) {
-                safeRedirectVerVacas($id_est, 'creado');
+                safeRedirectVerVacas($id_est, 'exito', 'creado');
             }
         }
     }

@@ -136,30 +136,44 @@ if ($error === 'duplicado') {
         <div class="card my-4 shadow-sm">
             <div class="card-body">
                 <h5 class="card-title">Registrar Nuevo Vacuno</h5>
-                <form action="../back/controllers/VacunoController.php" method="POST" class="row g-2">
+                <form action="../back/controllers/VacunoController.php" method="POST" class="row g-3">
                     <input type="hidden" name="id_establecimiento" value="<?php echo $id_establecimiento; ?>">
-                    <div class="col-md-2">
-                        <input type="text" name="caravana" class="form-control" placeholder="Caravana" required pattern="[A-Za-z0-9]{1,20}" title="Solo letras y números">
+
+                    <div class="col-md-3">
+                        <label class="form-label text-muted small">Número de Caravana</label>
+                        <input type="text" name="caravana" class="form-control" placeholder="Ej: A102" required pattern="[A-Za-z0-9]{1,20}">
                     </div>
-                    <div class="col-md-2">
+
+                    <div class="col-md-3">
+                        <label class="form-label text-muted small">Tipo de Animal</label>
                         <select name="tipo" class="form-select">
                             <?php foreach (Vacuno::getTipos() as $t): ?>
                                 <option value="<?php echo escapeHtml($t); ?>"><?php echo escapeHtml($t); ?></option>
                             <?php endforeach; ?>
                         </select>
                     </div>
-                    <div class="col-md-3">
+
+                    <div class="col-md-6">
+                        <label class="form-label text-muted small">Raza</label>
                         <select name="raza" class="form-select">
                             <?php foreach (Vacuno::getRazas() as $r): ?>
                                 <option value="<?php echo escapeHtml($r); ?>"><?php echo escapeHtml($r); ?></option>
                             <?php endforeach; ?>
                         </select>
                     </div>
-                    <div class="col-md-2">
-                        <input type="number" name="peso" class="form-control" placeholder="Peso (kg)" min="10" max="999" required>
+
+                    <div class="col-md-4">
+                        <label class="form-label text-muted small">Edad (Meses)</label>
+                        <input type="number" name="edad" class="form-control" placeholder="0 m" min="0" required>
                     </div>
-                    <div class="col-md-3">
-                        <button type="submit" class="btn btn-primary w-100">Guardar</button>
+
+                    <div class="col-md-4">
+                        <label class="form-label text-muted small">Peso Inicial (kg)</label>
+                        <input type="number" name="peso" class="form-control" placeholder="10 - 999 kg" required>
+                    </div>
+
+                    <div class="col-md-4 d-flex align-items-end">
+                        <button type="submit" class="btn btn-primary w-100 py-2">💾 Guardar en Cuaderno</button>
                     </div>
                 </form>
             </div>
