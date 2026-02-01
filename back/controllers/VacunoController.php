@@ -17,7 +17,6 @@ function safeRedirectVerVacas($id_est, $tipo, $valor = null)
 {
     $id = filter_var($id_est, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]);
     if ($id) {
-        // Usar formato original: &exito=creado o &error=peso_bajo
         if ($valor !== null) {
             header("Location: ../../front/ver_vacas.php?id=" . $id . "&" . $tipo . "=" . $valor);
         } else {
@@ -25,20 +24,17 @@ function safeRedirectVerVacas($id_est, $tipo, $valor = null)
         }
         exit();
     }
-    // Si el ID no es válido, redirigir a gestión
     header("Location: ../../front/gestion.php?mensaje=error");
     exit();
 }
 
 // 1. Lógica para ELIMINAR
 if (isset($_GET['accion']) && $_GET['accion'] == 'eliminar') {
-    // Validar que existan los parámetros necesarios
     if (!isset($_GET['caravana']) || !isset($_GET['id_est'])) {
         header("Location: ../../front/gestion.php?mensaje=error");
         exit();
     }
 
-    // Sanitizar inputs
     $caravana = sanitizeInput($_GET['caravana']);
     $id_est = filter_var($_GET['id_est'], FILTER_VALIDATE_INT);
 
@@ -57,7 +53,6 @@ if (isset($_GET['accion']) && $_GET['accion'] == 'eliminar') {
 
 // 2. Lógica para CREAR o EDITAR
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // Validar que exista id_establecimiento
     if (!isset($_POST['id_establecimiento'])) {
         header("Location: ../../front/gestion.php?mensaje=error");
         exit();
@@ -71,39 +66,40 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     if ($accion === 'editar') {
-        // Validar campos requeridos para editar
-        if (!isset($_POST['caravana_original']) || !isset($_POST['peso']) || !isset($_POST['edad'])) {
+        // --- LÓGICA DE EDITAR ACTUALIZADA ---
+        if (!isset($_POST['caravana_original']) || !isset($_POST['peso']) || !isset($_POST['cantidad_edad'])) {
             safeRedirectVerVacas($id_est, 'error', 'general');
         }
 
         $caravana_original = sanitizeInput($_POST['caravana_original']);
         $peso = (float)$_POST['peso'];
-        $edad = (int)$_POST['edad'];
 
-        // Seguridad para EDITAR [cite: 2026-01-28]
+        // Recalculamos la fecha de nacimiento para la edición
+        $cantidad = (int)$_POST['cantidad_edad'];
+        $unidad = $_POST['unidad_edad'] ?? 'months';
+
+        $fecha_ref = new DateTime();
+        $fecha_ref->modify("-$cantidad $unidad");
+        $nueva_fecha_inicio = $fecha_ref->format('Y-m-d');
+
+        // Seguridad de peso
         if ($peso < 10) {
             safeRedirectVerVacas($id_est, 'error', 'peso_bajo');
         } elseif ($peso > 999) {
             safeRedirectVerVacas($id_est, 'error', 'peso_alto');
         }
 
-        // Validar edad razonable
-        if ($edad < 0 || $edad > 30) {
-            safeRedirectVerVacas($id_est, 'error', 'general');
-        }
-
-        // Sanitizar historial
         $historial = isset($_POST['historial']) ? sanitizeInput($_POST['historial']) : '';
 
-        $vaca = new Vacuno("", $caravana_original, "", $edad, $peso, $id_est);
+        // Creamos el objeto con la nueva fecha calculada
+        $vaca = new Vacuno("", $caravana_original, "", $nueva_fecha_inicio, $peso, $id_est);
         $vaca->actualizarHistorial($historial);
 
         if ($vaca->actualizar($caravana_original)) {
             safeRedirectVerVacas($id_est, 'exito', 'editado');
         }
     } else {
-        // --- LÓGICA DE CREAR CON QA --- [cite: 2026-01-28]
-        // Validar campos requeridos
+        // --- LÓGICA DE CREAR ---
         if (!isset($_POST['caravana']) || !isset($_POST['peso']) || !isset($_POST['tipo'])) {
             safeRedirectVerVacas($id_est, 'error', 'general');
         }
@@ -113,7 +109,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $tipo = sanitizeInput($_POST['tipo']);
         $raza = isset($_POST['raza']) ? sanitizeInput($_POST['raza']) : '';
 
-        // Validar datos
         if (empty($caravana)) {
             safeRedirectVerVacas($id_est, 'error', 'general');
         }
@@ -125,7 +120,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } elseif ($peso > 999) {
             safeRedirectVerVacas($id_est, 'error', 'peso_alto');
         } else {
-            $vaca = new Vacuno($tipo, $caravana, $raza, 0, $peso, $id_est);
+            // Cálculo de edad dinámica para el alta
+            $cantidad = isset($_POST['cantidad_edad']) ? (int)$_POST['cantidad_edad'] : 0;
+            $unidad = isset($_POST['unidad_edad']) ? $_POST['unidad_edad'] : 'months';
+
+            $fecha_ref = new DateTime();
+            $fecha_ref->modify("-$cantidad $unidad");
+            $fecha_inicio = $fecha_ref->format('Y-m-d');
+
+            $vaca = new Vacuno($tipo, $caravana, $raza, $fecha_inicio, $peso, $id_est);
+
             if ($vaca->insertar()) {
                 safeRedirectVerVacas($id_est, 'exito', 'creado');
             }

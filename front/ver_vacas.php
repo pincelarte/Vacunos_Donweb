@@ -24,7 +24,6 @@ $id_establecimiento = null;
 if (isset($_GET['id'])) {
     $id_establecimiento = filter_var($_GET['id'], FILTER_VALIDATE_INT);
     if (!$id_establecimiento || $id_establecimiento < 1) {
-        // Si el ID no es válido, redirigir a gestión
         header("Location: gestion.php?mensaje=error");
         exit();
     }
@@ -36,17 +35,15 @@ if (!$id_establecimiento) {
 }
 
 require_once __DIR__ . '/../back/models/Vacuno.php';
-// Requerimos el modelo de Establecimiento para buscar el nombre [cite: 2026-01-28]
 require_once __DIR__ . '/../back/models/Establecimiento.php';
 
 $modeloEst = new Establecimiento();
-// Usamos la función obtenerPorId (asegurate de haberla agregado al modelo como vimos antes) [cite: 2026-01-28]
 $datosEst = $modeloEst->obtenerPorId($id_establecimiento);
 $nombreEst = $datosEst['nombre'] ?? 'Desconocido';
 
 $listaVacas = Vacuno::listarPorEstablecimiento($id_establecimiento);
 
-// Validar y sanitizar mensajes de error/exito con lista blanca
+// Validar mensajes
 $erroresValidos = ['duplicado', 'peso_bajo', 'peso_alto', 'general'];
 $exitosValidos = ['creado', 'editado', 'eliminado'];
 
@@ -61,10 +58,8 @@ if (isset($_GET['exito']) && in_array($_GET['exito'], $exitosValidos)) {
     $exito = $_GET['exito'];
 }
 
-// Escapar nombre del establecimiento para el título
 $nombreEstSafe = escapeHtml($nombreEst);
 
-// Mensajes del asistente Don Silicio (ya escapados)
 $mensajeSilicio = '';
 if ($error === 'duplicado') {
     $mensajeSilicio = '<span style="color: red;"><b>¡Epa, amigo!</b></span> Ese número de caravana ya lo tenemos anotado.';
@@ -95,7 +90,6 @@ if ($error === 'duplicado') {
     <style>
         .contenedor-asistente {
             position: absolute;
-            /* Cambiamos fixed por absolute para que NO baje con el scroll [cite: 2026-01-28] */
             top: 10px;
             right: 0;
             z-index: 1000;
@@ -117,7 +111,6 @@ if ($error === 'duplicado') {
             border-radius: 15px;
             padding: 8px 12px;
             margin-right: -55px;
-            /* Esto lo acerca al paisano como lo tenías antes [cite: 2026-01-28] */
             max-width: 280px;
             box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.1);
             font-size: 0.85rem;
@@ -153,7 +146,7 @@ if ($error === 'duplicado') {
                         </select>
                     </div>
 
-                    <div class="col-md-6">
+                    <div class="col-md-3">
                         <label class="form-label text-muted small">Raza</label>
                         <select name="raza" class="form-select">
                             <?php foreach (Vacuno::getRazas() as $r): ?>
@@ -162,9 +155,16 @@ if ($error === 'duplicado') {
                         </select>
                     </div>
 
-                    <div class="col-md-4">
-                        <label class="form-label text-muted small">Edad (Meses)</label>
-                        <input type="number" name="edad" class="form-control" placeholder="0 m" min="0" required>
+                    <div class="col-md-3">
+                        <label class="form-label text-muted small">Edad Actual</label>
+                        <div class="input-group">
+                            <input type="number" name="cantidad_edad" class="form-control" placeholder="0" min="0" required>
+                            <select name="unidad_edad" class="form-select">
+                                <option value="days">Días</option>
+                                <option value="months" selected>Meses</option>
+                                <option value="years">Años</option>
+                            </select>
+                        </div>
                     </div>
 
                     <div class="col-md-4">
@@ -173,7 +173,7 @@ if ($error === 'duplicado') {
                     </div>
 
                     <div class="col-md-4 d-flex align-items-end">
-                        <button type="submit" class="btn btn-primary w-100 py-2">💾 Guardar en Cuaderno</button>
+                        <button type="submit" class="btn btn-primary w-100 py-2">💾 Anotar en Cuaderno</button>
                     </div>
                 </form>
             </div>
@@ -182,13 +182,13 @@ if ($error === 'duplicado') {
         <table class="table table-hover bg-white shadow-sm">
             <thead class="table-dark">
                 <tr>
-                    <th>Caravana</th>
+                    <th>Num</th>
                     <th>Tipo</th>
                     <th>Raza</th>
                     <th>Edad</th>
                     <th>Peso</th>
-                    <th>Historial</th>
-                    <th>Acciones</th>
+                    <th>Histo</th>
+                    <th>Accion</th>
                 </tr>
             </thead>
             <tbody>
@@ -198,11 +198,18 @@ if ($error === 'duplicado') {
                     </tr>
                 <?php else: ?>
                     <?php foreach ($listaVacas as $vaca): ?>
+                        <?php
+                        // LÓGICA DE CÁLCULO DINÁMICO [cite: 2026-01-31]
+                        $fecha_nac = new DateTime($vaca['edad']);
+                        $hoy = new DateTime();
+                        $dif = $hoy->diff($fecha_nac);
+                        $texto_edad = $dif->format('%y años, %m meses');
+                        ?>
                         <tr>
                             <td><?php echo escapeHtml($vaca['caravana']); ?></td>
                             <td><?php echo escapeHtml($vaca['tipo']); ?></td>
                             <td><?php echo escapeHtml($vaca['raza']); ?></td>
-                            <td><?php echo escapeHtml($vaca['edad']); ?> m</td>
+                            <td><strong><?php echo $texto_edad; ?></strong></td>
                             <td><?php echo escapeHtml($vaca['peso_actual']); ?> kg</td>
                             <td class="text-center">
                                 <?php if (!empty($vaca['historial'])): ?>
