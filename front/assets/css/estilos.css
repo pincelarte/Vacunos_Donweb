@@ -1,0 +1,118 @@
+/* Paleta Ganadera - Verde Campo y Marrón Tierra */
+:root {
+    --verde-principal: #2e7d32;
+    --verde-oscuro: #1b5e20;
+    --verde-claro: #4caf50;
+    --marron-principal: #795548;
+    --marron-oscuro: #5d4037;
+    --marron-claro: #8d6e63;
+    --crema-fondo: #faf9f6;
+    --tierra-clara: #d7ccc8;
+    --texto-oscuro: #3e2723;
+}
+
+/* Fondo general */
+body {
+    background-color: var(--crema-fondo);
+    color: var(--texto-oscuro);
+}
+
+/* Headers de tablas */
+.table-dark {
+    background-color: var(--verde-principal) !important;
+}
+
+/* Cards */
+.card {
+    border: none;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.card-header {
+    border-radius: 12px 12px 0 0 !important;
+    font-weight: 600;
+}
+
+/* Botones principales */
+.btn-primary {
+    background-color: var(--verde-principal);
+    border-color: var(--verde-principal);
+}
+
+.btn-primary:hover {
+    background-color: var(--verde-oscuro);
+    border-color: var(--verde-oscuro);
+}
+
+/* Botones secundarios */
+.btn-secondary {
+    background-color: var(--marron-principal);
+    border-color: var(--marron-principal);
+}
+
+.btn-secondary:hover {
+    background-color: var(--marron-oscuro);
+    border-color: var-marron-oscuro;
+}
+
+/* Botones de acción */
+.btn-success {
+    background-color: var(--verde-claro);
+    border-color: var(--verde-claro);
+}
+
+.btn-warning {
+    background-color: #ef6c00;
+    border-color: #ef6c00;
+}
+
+.btn-danger {
+    background-color: #c62828;
+    border-color: #c62828;
+}
+
+/* Links en tablas */
+.table a {
+    color: var(--verde-principal);
+    text-decoration: none;
+}
+
+.table a:hover {
+    color: var(--verde-oscuro);
+    text-decoration: underline;
+}
+
+/* Inputs */
+.form-control:focus, .form-select:focus {
+    border-color: var(--verde-principal);
+    box-shadow: 0 0 0 0.2rem rgba(46, 125, 50, 0.25);
+}
+
+/* Alerts */
+.alert-success {
+    background-color: #e8f5e9;
+    border-color: #c8e6c9;
+    color: var(--verde-oscuro);
+}
+
+.alert-danger {
+    background-color: #ffebee;
+    border-color: #ffcdd2;
+    color: #c62828;
+}
+
+/* Dropdown menu */
+.dropdown-menu {
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.dropdown-item:hover {
+    background-color: var(--crema-fondo);
+}
+
+/* Títulos */
+h1, h2, h3, h4, h5 {
+    color: var(--texto-oscuro);
+}

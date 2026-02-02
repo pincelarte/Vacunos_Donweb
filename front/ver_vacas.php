@@ -89,6 +89,7 @@ if ($error === 'duplicado') {
     <meta charset="UTF-8">
     <title>Vacunos - <?php echo $nombreEstSafe; ?></title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="assets/css/estilos.css" rel="stylesheet">
     <style>
         .contenedor-asistente {
             position: absolute;
@@ -186,11 +187,11 @@ if ($error === 'duplicado') {
                 <tr>
                     <th>Num</th>
                     <th>Tipo</th>
-                    <th>Raza</th>
-                    <th>Edad</th>
-                    <th>Peso</th>
-                    <th>Histo</th>
-                    <th>Accion</th>
+                    <th class="text-center">Raza</th>
+                    <th class="text-center">Edad</th>
+                    <th class="text-center">Peso</th>
+                    <th class="text-center">Histo</th>
+                    <th class="text-center">Accion</th>
                 </tr>
             </thead>
             <tbody>
@@ -201,18 +202,18 @@ if ($error === 'duplicado') {
                 <?php else: ?>
                     <?php foreach ($listaVacas as $vaca): ?>
                         <?php
-                        // LÓGICA DE CÁLCULO DINÁMICO [cite: 2026-01-31]
+                        // Lógica de cálculo de edad
                         $fecha_nac = new DateTime($vaca['edad']);
                         $hoy = new DateTime();
                         $dif = $hoy->diff($fecha_nac);
                         $texto_edad = $dif->format('%y años, %m meses');
                         ?>
-                        <tr>
+                        <tr class="align-middle">
                             <td><?php echo escapeHtml($vaca['caravana']); ?></td>
                             <td><?php echo escapeHtml($vaca['tipo']); ?></td>
-                            <td><?php echo escapeHtml($vaca['raza']); ?></td>
-                            <td><strong><?php echo $texto_edad; ?></strong></td>
-                            <td><?php echo escapeHtml($vaca['peso_actual']); ?> kg</td>
+                            <td class="text-center"><?php echo escapeHtml($vaca['raza']); ?></td>
+                            <td class="text-center"><?php echo $texto_edad; ?></td>
+                            <td class="text-center"><?php echo escapeHtml($vaca['peso_actual']); ?> kg</td>
                             <td class="text-center">
                                 <a href="historial_vaca.php?caravana=<?php echo urlencode($vaca['caravana']); ?>"
                                     title="Ver historial de pesajes"
@@ -220,16 +221,17 @@ if ($error === 'duplicado') {
                                     🔍
                                 </a>
                             </td>
-                            <td>
-                                <a href="editar_vaca.php?caravana=<?php echo urlencode($vaca['caravana']); ?>" class="btn btn-sm btn-warning">
-                                    Editar
-                                </a>
-
-                                <a href="../back/controllers/VacunoController.php?accion=eliminar&caravana=<?php echo urlencode($vaca['caravana']); ?>&id_est=<?php echo $id_establecimiento; ?>"
-                                    class="btn btn-sm btn-danger"
-                                    onclick="return confirm('¿Seguro que quiere sacar este animal del sistema?')">
-                                    Eliminar
-                                </a>
+                            <td class="text-center">
+                                <div class="d-flex justify-content-center gap-2">
+                                    <a href="editar_vaca.php?caravana=<?php echo urlencode($vaca['caravana']); ?>" class="btn btn-sm btn-warning">
+                                        Editar
+                                    </a>
+                                    <a href="../back/controllers/VacunoController.php?accion=eliminar&caravana=<?php echo urlencode($vaca['caravana']); ?>&id_est=<?php echo $id_establecimiento; ?>"
+                                        class="btn btn-sm btn-danger"
+                                        onclick="return confirm('¿Seguro que quiere sacar este animal del sistema?')">
+                                        Eliminar
+                                    </a>
+                                </div>
                             </td>
                         </tr>
                     <?php endforeach; ?>

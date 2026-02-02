@@ -31,6 +31,7 @@ function escapeHtml($data)
     <meta charset="UTF-8">
     <title>Historial - <?php echo escapeHtml($caravana); ?></title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="assets/css/estilos.css" rel="stylesheet">
 </head>
 
 <body class="bg-light">
@@ -112,15 +113,17 @@ function escapeHtml($data)
                                                 <?php echo ($ultimoPeso !== null) ? ($dif > 0 ? '+' : '') . $dif . ' kg' : '---'; ?>
                                             </td>
                                             <td>
-                                                <a href="editar_pesaje.php?id=<?php echo $p['id']; ?>" class="btn btn-sm btn-outline-warning">Editar</a>
+                                                <div class="d-flex gap-2" style="min-width: 140px;">
+                                                    <a href="editar_pesaje.php?id=<?php echo $p['id']; ?>" class="btn btn-sm btn-outline-warning flex-grow-1 text-nowrap">Editar</a>
 
-                                                <?php if (!$esOriginal): ?>
-                                                    <a href="../back/controllers/VacunoController.php?accion=eliminar_pesaje&id_pesaje=<?php echo $p['id']; ?>&caravana=<?php echo $caravana; ?>"
-                                                        class="btn btn-sm btn-outline-danger"
-                                                        onclick="return confirm('¿Estás seguro de eliminar este registro de peso?')">
-                                                        Borrar
-                                                    </a>
-                                                <?php endif; ?>
+                                                    <?php if (!$esOriginal): ?>
+                                                        <a href="../back/controllers/VacunoController.php?accion=eliminar_pesaje&id_pesaje=<?php echo $p['id']; ?>&caravana=<?php echo $caravana; ?>"
+                                                            class="btn btn-sm btn-outline-danger flex-grow-1 text-nowrap"
+                                                            onclick="return confirm('¿Estás seguro de eliminar este registro de peso?')">
+                                                            Borrar
+                                                        </a>
+                                                    <?php endif; ?>
+                                                </div>
                                             </td>
                                         </tr>
                                     <?php
