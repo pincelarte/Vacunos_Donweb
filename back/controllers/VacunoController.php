@@ -76,6 +76,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $tipo = sanitizeInput($_POST['tipo']);
         $raza = sanitizeInput($_POST['raza'] ?? '');
 
+        // Validar longitud máxima de caravan (8 caracteres)
+        if (strlen($caravana) > 8) {
+            safeRedirectVerVacas($id_est, 'error', 'caravana_larga');
+        }
+
         if (Vacuno::existe($caravana)) {
             safeRedirectVerVacas($id_est, 'error', 'duplicado');
         } else {

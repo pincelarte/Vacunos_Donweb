@@ -44,7 +44,7 @@ $nombreEst = $datosEst['nombre'] ?? 'Desconocido';
 $listaVacas = Vacuno::listarPorEstablecimiento($id_establecimiento);
 
 // Validar mensajes
-$erroresValidos = ['duplicado', 'peso_bajo', 'peso_alto', 'general'];
+$erroresValidos = ['duplicado', 'peso_bajo', 'peso_alto', 'general', 'caravana_larga'];
 $exitosValidos = ['creado', 'editado', 'eliminado'];
 
 $error = null;
@@ -67,6 +67,8 @@ if ($error === 'duplicado') {
     $mensajeSilicio = '<span style="color: red;"><b>¡Atención!</b></span> ¿Seguro que pesa menos de 10 kg? Revise la balanza.';
 } elseif ($error === 'peso_alto') {
     $mensajeSilicio = '<span style="color: red;"><b>¡Epa, amigo!</b></span><br>¡Ese animal es un gigante! ¡Saque el pie de la balanza y vuelva a pesar!!!';
+} elseif ($error === 'caravana_larga') {
+    $mensajeSilicio = '<span style="color: red;"><b>¡Atención!</b></span> La caravana no puede tener más de 8 caracteres.';
 } elseif ($exito === 'creado') {
     $mensajeSilicio = '<span style="color: green;"><b>¡Lindo ejemplar!</b></span> Ya anoté al nuevo vacuno en el cuaderno.';
 } elseif ($exito === 'editado') {
@@ -134,7 +136,7 @@ if ($error === 'duplicado') {
 
                     <div class="col-md-3">
                         <label class="form-label text-muted small">Número de Caravana</label>
-                        <input type="text" name="caravana" class="form-control" placeholder="Ej: A102" required pattern="[A-Za-z0-9]{1,20}">
+                        <input type="text" name="caravana" class="form-control" placeholder="Ej: A102" required pattern="[A-Za-z0-9]{1,8}" maxlength="8">
                     </div>
 
                     <div class="col-md-3">
