@@ -89,6 +89,17 @@ class Vacuno
         return $stmt->execute([$this->edad, $this->peso, $this->historial, $caravana_id]);
     }
 
+    /**
+     * Actualiza solo el peso actual de un vacuno (usado para registrar pesajes)
+     */
+    public function actualizarPeso($caravana_id)
+    {
+        $con = $this->db->conectar();
+        $sql = "UPDATE vacunos SET peso_actual = ? WHERE caravana = ?";
+        $stmt = $con->prepare($sql);
+        return $stmt->execute([$this->peso, $caravana_id]);
+    }
+
     public function actualizarHistorial($texto)
     {
         $this->historial = $texto;

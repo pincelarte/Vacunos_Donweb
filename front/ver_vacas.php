@@ -212,11 +212,11 @@ if ($error === 'duplicado') {
                             <td><strong><?php echo $texto_edad; ?></strong></td>
                             <td><?php echo escapeHtml($vaca['peso_actual']); ?> kg</td>
                             <td class="text-center">
-                                <?php if (!empty($vaca['historial'])): ?>
-                                    <a href="editar_vaca.php?caravana=<?php echo urlencode($vaca['caravana']); ?>" style="text-decoration: none;">🔍</a>
-                                <?php else: ?>
-                                    <small class="text-muted">Sin datos</small>
-                                <?php endif; ?>
+                                <a href="historial_vaca.php?caravana=<?php echo urlencode($vaca['caravana']); ?>"
+                                    title="Ver historial de pesajes"
+                                    style="text-decoration: none; font-size: 1.2rem;">
+                                    🔍
+                                </a>
                             </td>
                             <td>
                                 <a href="editar_vaca.php?caravana=<?php echo urlencode($vaca['caravana']); ?>" class="btn btn-sm btn-warning">
