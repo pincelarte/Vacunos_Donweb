@@ -91,50 +91,55 @@ if ($error === 'duplicado') {
     <title>Vacunos - <?php echo $nombreEstSafe; ?></title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="assets/css/estilos.css" rel="stylesheet">
+    <link rel="icon" type="image/png" href="assets/img/favicon.png">
     <style>
+        /* Desktop: Don Silicio a la derecha */
         .contenedor-asistente {
+            position: absolute;
+            top: 10px;
+            right: 0;
+            z-index: 1000;
             display: flex;
             flex-direction: row;
-            align-items: flex-start;
-            gap: 15px;
-            margin: 1rem 0;
-            padding: 10px;
+            align-items: center;
         }
 
         .img-silicio {
-            width: 200px;
+            width: 300px;
             height: auto;
             transform: scaleX(-1);
-            filter: drop-shadow(2px 2px 4px rgba(0, 0, 0, 0.2));
+            filter: drop-shadow(3px 3px 5px rgba(0, 0, 0, 0.3));
         }
 
         .burbuja-silicio {
             background: #ffffff;
             border: 2px solid #2c3e50;
             border-radius: 15px;
-            padding: 12px 15px;
-            max-width: 300px;
-            box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.1);
-            font-size: 0.9rem;
+            padding: 8px 12px;
+            margin-right: -55px;
+            max-width: 280px;
+            box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.1);
+            font-size: 0.85rem;
             position: relative;
+            z-index: 1001;
         }
 
-        .burbuja-silicio::before {
-            content: '';
-            position: absolute;
-            left: -12px;
-            top: 15px;
-            border-width: 10px 12px 10px 0;
-            border-style: solid;
-            border-color: transparent #2c3e50 transparent transparent;
-        }
-
+        /* Móvil: Solo burbuja debajo del header */
         @media (max-width: 575px) {
+            .contenedor-asistente {
+                position: relative;
+                top: auto;
+                right: auto;
+                margin: 1rem 0;
+                justify-content: flex-start;
+            }
+
             .img-silicio {
                 display: none;
             }
 
             .burbuja-silicio {
+                margin-right: 0;
                 max-width: 100%;
                 font-size: 0.85rem;
             }
@@ -148,13 +153,12 @@ if ($error === 'duplicado') {
         <a href="gestion.php" class="btn btn-secondary mb-3">Volver a Gestión</a>
         <hr>
 
-        <!-- Asistente Don Silicio -->
-        <div class="contenedor-asistente mb-4">
+        <!-- Don Silicio móvil: solo burbuja -->
+        <div class="contenedor-asistente d-block d-md-none">
             <div class="burbuja-silicio">
                 <b>Don Silicio dice:</b><br>
                 <?php echo $mensajeSilicio; ?>
             </div>
-            <img src="assets/img/DonSilicio-indice.png" class="img-silicio" alt="Don Silicio">
         </div>
 
         <div class="card my-4 shadow-sm">
@@ -268,6 +272,15 @@ if ($error === 'duplicado') {
                 </tbody>
             </table>
         </div>
+    </div>
+
+    <!-- Don Silicio desktop: imagen + burbuja -->
+    <div class="contenedor-asistente d-none d-md-flex">
+        <div class="burbuja-silicio">
+            <b>Don Silicio dice:</b><br>
+            <?php echo $mensajeSilicio; ?>
+        </div>
+        <img src="assets/img/DonSilicio-indice.png" class="img-silicio" alt="Don Silicio">
     </div>
 </body>
 
