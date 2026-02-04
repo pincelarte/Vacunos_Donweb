@@ -148,7 +148,7 @@ if ($error === 'duplicado') {
 </head>
 
 <body class="bg-light">
-    <div class="container mt-4">
+    <div class="container-fluid mt-4">
         <h1><?php echo $nombreEstSafe; ?></h1>
         <a href="gestion.php" class="btn btn-secondary mb-3">Volver a Gestión</a>
         <hr>
