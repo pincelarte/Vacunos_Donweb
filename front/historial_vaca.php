@@ -29,9 +29,11 @@ function escapeHtml($data)
 
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Historial - <?php echo escapeHtml($caravana); ?></title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="assets/css/estilos.css" rel="stylesheet">
+    <link rel="icon" type="image/png" href="assets/img/favicon.png">
 </head>
 
 <body class="bg-light">
@@ -80,66 +82,67 @@ function escapeHtml($data)
                 <div class="card shadow-sm">
                     <div class="card-header bg-dark text-white">Evolución de Pesos</div>
                     <div class="card-body p-0">
-                        <table class="table table-striped mb-0">
-                            <thead>
-                                <tr>
-                                    <th>Fecha y Hora</th>
-                                    <th>Peso Registrado</th>
-                                    <th>Diferencia</th>
-                                    <th>Acciones</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <?php if (empty($historial)): ?>
+                        <div class="table-responsive">
+                            <table class="table table-striped mb-0">
+                                <thead>
                                     <tr>
-                                        <td colspan="4" class="text-center">No hay registros de pesaje.</td>
+                                        <th>Fecha y Hora</th>
+                                        <th>Peso Registrado</th>
+                                        <th>Diferencia</th>
+                                        <th>Acciones</th>
                                     </tr>
-                                <?php else: ?>
-                                    <?php
-                                    $ultimoPeso = null;
-                                    $historialReversed = array_reverse($historial);
-                                    $totalPesajes = count($historialReversed);
-                                    $indice = 0;
-                                    // Usamos array_reverse para calcular la diferencia del más viejo al más nuevo
-                                    foreach ($historialReversed as $p):
-                                        $dif = ($ultimoPeso !== null) ? ($p['peso'] - $ultimoPeso) : 0;
-                                        $colorDif = ($dif > 0) ? 'text-success' : 'text-danger';
-                                        $esOriginal = ($indice === 0); // El primer elemento (más viejo) es el original
-                                    ?>
+                                </thead>
+                                <tbody>
+                                    <?php if (empty($historial)): ?>
                                         <tr>
-                                            <td><?php echo date('d/m/Y H:i', strtotime($p['fecha_pesaje'])); ?></td>
-                                            <td><strong><?php echo escapeHtml($p['peso']); ?> kg</strong></td>
-                                            <td class="<?php echo $colorDif; ?>">
-                                                <?php echo ($ultimoPeso !== null) ? ($dif > 0 ? '+' : '') . $dif . ' kg' : '---'; ?>
-                                            </td>
-                                            <td>
-                                                <div class="d-flex gap-2" style="min-width: 140px;">
-                                                    <a href="editar_pesaje.php?id=<?php echo $p['id']; ?>" class="btn btn-sm btn-outline-warning flex-grow-1 text-nowrap">Editar</a>
-
-                                                    <?php if (!$esOriginal): ?>
-                                                        <a href="../back/controllers/VacunoController.php?accion=eliminar_pesaje&id_pesaje=<?php echo $p['id']; ?>&caravana=<?php echo $caravana; ?>"
-                                                            class="btn btn-sm btn-outline-danger flex-grow-1 text-nowrap"
-                                                            onclick="return confirm('¿Estás seguro de eliminar este registro de peso?')">
-                                                            Borrar
-                                                        </a>
-                                                    <?php endif; ?>
-                                                </div>
-                                            </td>
+                                            <td colspan="4" class="text-center">No hay registros de pesaje.</td>
                                         </tr>
-                                    <?php
-                                        $ultimoPeso = $p['peso'];
-                                        $indice++;
-                                    endforeach; ?>
-                                <?php endif; ?>
-                            </tbody>
-                        </table>
+                                    <?php else: ?>
+                                        <?php
+                                        $ultimoPeso = null;
+                                        $historialReversed = array_reverse($historial);
+                                        $totalPesajes = count($historialReversed);
+                                        $indice = 0;
+                                        // Usamos array_reverse para calcular la diferencia del más viejo al más nuevo
+                                        foreach ($historialReversed as $p):
+                                            $dif = ($ultimoPeso !== null) ? ($p['peso'] - $ultimoPeso) : 0;
+                                            $colorDif = ($dif > 0) ? 'text-success' : 'text-danger';
+                                            $esOriginal = ($indice === 0); // El primer elemento (más viejo) es el original
+                                        ?>
+                                            <tr>
+                                                <td><?php echo date('d/m/Y H:i', strtotime($p['fecha_pesaje'])); ?></td>
+                                                <td><strong><?php echo escapeHtml($p['peso']); ?> kg</strong></td>
+                                                <td class="<?php echo $colorDif; ?>">
+                                                    <?php echo ($ultimoPeso !== null) ? ($dif > 0 ? '+' : '') . $dif . ' kg' : '---'; ?>
+                                                </td>
+                                                <td>
+                                                    <div class="d-flex gap-2" style="min-width: 140px;">
+                                                        <a href="editar_pesaje.php?id=<?php echo $p['id']; ?>" class="btn btn-sm btn-outline-warning flex-grow-1 text-nowrap">Editar</a>
+
+                                                        <?php if (!$esOriginal): ?>
+                                                            <a href="../back/controllers/VacunoController.php?accion=eliminar_pesaje&id_pesaje=<?php echo $p['id']; ?>&caravana=<?php echo $caravana; ?>"
+                                                                class="btn btn-sm btn-outline-danger flex-grow-1 text-nowrap"
+                                                                onclick="return confirm('¿Estás seguro de eliminar este registro de peso?')">
+                                                                Borrar
+                                                            </a>
+                                                        <?php endif; ?>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        <?php
+                                            $ultimoPeso = $p['peso'];
+                                            $indice++;
+                                        endforeach; ?>
+                                    <?php endif; ?>
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 
 </html>

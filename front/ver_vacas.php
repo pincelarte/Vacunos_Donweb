@@ -87,38 +87,57 @@ if ($error === 'duplicado') {
 
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Vacunos - <?php echo $nombreEstSafe; ?></title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="assets/css/estilos.css" rel="stylesheet">
     <style>
         .contenedor-asistente {
-            position: absolute;
-            top: 10px;
-            right: 0;
-            z-index: 1000;
             display: flex;
             flex-direction: row;
-            align-items: center;
+            align-items: flex-start;
+            gap: 15px;
+            margin: 1rem 0;
+            padding: 10px;
         }
 
         .img-silicio {
-            width: 300px;
+            width: 200px;
             height: auto;
             transform: scaleX(-1);
-            filter: drop-shadow(3px 3px 5px rgba(0, 0, 0, 0.3));
+            filter: drop-shadow(2px 2px 4px rgba(0, 0, 0, 0.2));
         }
 
         .burbuja-silicio {
             background: #ffffff;
             border: 2px solid #2c3e50;
             border-radius: 15px;
-            padding: 8px 12px;
-            margin-right: -55px;
-            max-width: 280px;
-            box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.1);
-            font-size: 0.85rem;
+            padding: 12px 15px;
+            max-width: 300px;
+            box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.1);
+            font-size: 0.9rem;
             position: relative;
-            z-index: 1001;
+        }
+
+        .burbuja-silicio::before {
+            content: '';
+            position: absolute;
+            left: -12px;
+            top: 15px;
+            border-width: 10px 12px 10px 0;
+            border-style: solid;
+            border-color: transparent #2c3e50 transparent transparent;
+        }
+
+        @media (max-width: 575px) {
+            .img-silicio {
+                display: none;
+            }
+
+            .burbuja-silicio {
+                max-width: 100%;
+                font-size: 0.85rem;
+            }
         }
     </style>
 </head>
@@ -128,6 +147,15 @@ if ($error === 'duplicado') {
         <h1><?php echo $nombreEstSafe; ?></h1>
         <a href="gestion.php" class="btn btn-secondary mb-3">Volver a Gestión</a>
         <hr>
+
+        <!-- Asistente Don Silicio -->
+        <div class="contenedor-asistente mb-4">
+            <div class="burbuja-silicio">
+                <b>Don Silicio dice:</b><br>
+                <?php echo $mensajeSilicio; ?>
+            </div>
+            <img src="assets/img/DonSilicio-indice.png" class="img-silicio" alt="Don Silicio">
+        </div>
 
         <div class="card my-4 shadow-sm">
             <div class="card-body">
@@ -182,69 +210,64 @@ if ($error === 'duplicado') {
             </div>
         </div>
 
-        <table class="table table-hover bg-white shadow-sm">
-            <thead class="table-dark">
-                <tr>
-                    <th>Num</th>
-                    <th>Tipo</th>
-                    <th class="text-center">Raza</th>
-                    <th class="text-center">Edad</th>
-                    <th class="text-center">Peso</th>
-                    <th class="text-center">Histo</th>
-                    <th class="text-center">Accion</th>
-                </tr>
-            </thead>
-            <tbody>
-                <?php if (empty($listaVacas)): ?>
+        <div class="table-responsive">
+            <table class="table table-hover bg-white shadow-sm">
+                <thead class="table-dark">
                     <tr>
-                        <td colspan="7" class="text-center">No hay vacunos registrados en este establecimiento.</td>
+                        <th>Num</th>
+                        <th>Tipo</th>
+                        <th class="text-center">Raza</th>
+                        <th class="text-center">Edad</th>
+                        <th class="text-center">Peso</th>
+                        <th class="text-center">Histo</th>
+                        <th class="text-center">Accion</th>
                     </tr>
-                <?php else: ?>
-                    <?php foreach ($listaVacas as $vaca): ?>
-                        <?php
-                        // Lógica de cálculo de edad
-                        $fecha_nac = new DateTime($vaca['edad']);
-                        $hoy = new DateTime();
-                        $dif = $hoy->diff($fecha_nac);
-                        $texto_edad = $dif->format('%y años, %m meses');
-                        ?>
-                        <tr class="align-middle">
-                            <td><?php echo escapeHtml($vaca['caravana']); ?></td>
-                            <td><?php echo escapeHtml($vaca['tipo']); ?></td>
-                            <td class="text-center"><?php echo escapeHtml($vaca['raza']); ?></td>
-                            <td class="text-center"><?php echo $texto_edad; ?></td>
-                            <td class="text-center"><?php echo escapeHtml($vaca['peso_actual']); ?> kg</td>
-                            <td class="text-center">
-                                <a href="historial_vaca.php?caravana=<?php echo urlencode($vaca['caravana']); ?>"
-                                    title="Ver historial de pesajes"
-                                    style="text-decoration: none; font-size: 1.2rem;">
-                                    🔍
-                                </a>
-                            </td>
-                            <td class="text-center">
-                                <div class="d-flex justify-content-center gap-2">
-                                    <a href="editar_vaca.php?caravana=<?php echo urlencode($vaca['caravana']); ?>" class="btn btn-sm btn-warning">
-                                        Editar
-                                    </a>
-                                    <a href="../back/controllers/VacunoController.php?accion=eliminar&caravana=<?php echo urlencode($vaca['caravana']); ?>&id_est=<?php echo $id_establecimiento; ?>"
-                                        class="btn btn-sm btn-danger"
-                                        onclick="return confirm('¿Seguro que quiere sacar este animal del sistema?')">
-                                        Eliminar
-                                    </a>
-                                </div>
-                            </td>
+                </thead>
+                <tbody>
+                    <?php if (empty($listaVacas)): ?>
+                        <tr>
+                            <td colspan="7" class="text-center">No hay vacunos registrados en este establecimiento.</td>
                         </tr>
-                    <?php endforeach; ?>
-                <?php endif; ?>
-            </tbody>
-        </table>
-    </div>
-    <div class="contenedor-asistente">
-        <div class="burbuja-silicio">
-            <b>Don Silicio dice:</b><br>
-            <?php echo $mensajeSilicio; ?>
+                    <?php else: ?>
+                        <?php foreach ($listaVacas as $vaca): ?>
+                            <?php
+                            // Lógica de cálculo de edad
+                            $fecha_nac = new DateTime($vaca['edad']);
+                            $hoy = new DateTime();
+                            $dif = $hoy->diff($fecha_nac);
+                            $texto_edad = $dif->format('%y años, %m meses');
+                            ?>
+                            <tr class="align-middle">
+                                <td><?php echo escapeHtml($vaca['caravana']); ?></td>
+                                <td><?php echo escapeHtml($vaca['tipo']); ?></td>
+                                <td class="text-center"><?php echo escapeHtml($vaca['raza']); ?></td>
+                                <td class="text-center"><?php echo $texto_edad; ?></td>
+                                <td class="text-center"><?php echo escapeHtml($vaca['peso_actual']); ?> kg</td>
+                                <td class="text-center">
+                                    <a href="historial_vaca.php?caravana=<?php echo urlencode($vaca['caravana']); ?>"
+                                        title="Ver historial de pesajes"
+                                        style="text-decoration: none; font-size: 1.2rem;">
+                                        🔍
+                                    </a>
+                                </td>
+                                <td class="text-center">
+                                    <div class="d-flex justify-content-center gap-2">
+                                        <a href="editar_vaca.php?caravana=<?php echo urlencode($vaca['caravana']); ?>" class="btn btn-sm btn-warning">
+                                            Editar
+                                        </a>
+                                        <a href="../back/controllers/VacunoController.php?accion=eliminar&caravana=<?php echo urlencode($vaca['caravana']); ?>&id_est=<?php echo $id_establecimiento; ?>"
+                                            class="btn btn-sm btn-danger"
+                                            onclick="return confirm('¿Seguro que quiere sacar este animal del sistema?')">
+                                            Eliminar
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+                    <?php endif; ?>
+                </tbody>
+            </table>
         </div>
-        <img src="assets/img/DonSilicio-indice.png" class="img-silicio" alt="Don Silicio">
     </div>
 </body>
 

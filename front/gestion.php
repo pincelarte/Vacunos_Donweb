@@ -59,9 +59,11 @@ if (isset($_GET['mensaje']) && in_array($_GET['mensaje'], $mensajesValidos)) {
 
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gestión - Don Silicio</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="assets/css/estilos.css" rel="stylesheet">
+    <link rel="icon" type="image/png" href="assets/img/favicon.png">
 </head>
 
 <body class="bg-light">
@@ -95,69 +97,70 @@ if (isset($_GET['mensaje']) && in_array($_GET['mensaje'], $mensajesValidos)) {
             </div>
         <?php endif; ?>
 
-        <table class="table table-striped bg-white shadow-sm">
-            <thead class="table-dark">
-                <tr>
-                    <th class="text-center">ID</th>
-                    <th class="text-center">Nombre</th>
-                    <th class="text-center">Ubicación</th>
-                    <th class="text-center">Acción</th>
-                </tr>
-            </thead>
-            <tbody>
-                <?php if (!empty($listaEstablecimientos)): ?>
-                    <?php foreach ($listaEstablecimientos as $est): ?>
-                        <tr>
-                            <td class="text-center"><?php echo escapeHtml($est['id']); ?></td>
-                            <td class="text-center"><?php echo escapeHtml($est['nombre']); ?></td>
-                            <td class="text-center"><?php echo escapeHtml($est['ubicacion']); ?></td>
-                            <td class="text-center">
-                                <div class="btn-group">
-                                    <a href="ver_vacas.php?id=<?php echo urlencode($est['id']); ?>" class="btn btn-sm btn-success">Seleccionar</a>
-
-                                    <button type="button" class="btn btn-sm btn-secondary dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown" aria-expanded="false">
-                                        ⚙️
-                                    </button>
-
-                                    <ul class="dropdown-menu shadow">
-                                        <li>
-                                            <a class="dropdown-item" href="editar_establecimiento.php?id=<?php echo urlencode($est['id']); ?>">✏️ Editar</a>
-                                        </li>
-                                        <li>
-                                            <hr class="dropdown-divider">
-                                        </li>
-                                        <li>
-                                            <button class="dropdown-item text-danger" onclick="confirmarBorrado(<?php echo (int)$est['id']; ?>, '<?php echo addslashes(escapeHtml($est['nombre'])); ?>')">
-                                                🗑️ Borrar
-                                            </button>
-                                        </li>
-                                    </ul>
-                                </div>
-                            </td>
-                        </tr>
-                    <?php endforeach; ?>
-                <?php else: ?>
+        <div class="table-responsive">
+            <table class="table table-striped bg-white shadow-sm">
+                <thead class="table-dark">
                     <tr>
-                        <td colspan="4" class="text-center text-muted">No hay establecimientos cargados.</td>
+                        <th class="text-center">ID</th>
+                        <th class="text-center">Nombre</th>
+                        <th class="text-center">Ubicación</th>
+                        <th class="text-center">Acción</th>
                     </tr>
-                <?php endif; ?>
-            </tbody>
-        </table>
-    </div>
-    <script>
-        function confirmarBorrado(id, nombre) {
-            // Pedimos al usuario que escriba 'borrar' para confirmar [cite: 2026-01-24]
-            let confirmacion = prompt("Para eliminar el establecimiento '" + nombre + "', escriba 'borrar':");
+                </thead>
+                <tbody>
+                    <?php if (!empty($listaEstablecimientos)): ?>
+                        <?php foreach ($listaEstablecimientos as $est): ?>
+                            <tr>
+                                <td class="text-center"><?php echo escapeHtml($est['id']); ?></td>
+                                <td class="text-center"><?php echo escapeHtml($est['nombre']); ?></td>
+                                <td class="text-center"><?php echo escapeHtml($est['ubicacion']); ?></td>
+                                <td class="text-center">
+                                    <div class="btn-group">
+                                        <a href="ver_vacas.php?id=<?php echo urlencode($est['id']); ?>" class="btn btn-sm btn-success">Seleccionar</a>
 
-            if (confirmacion === 'borrar') {
-                // Si escribió bien, lo mandamos al controlador [cite: 2026-01-28]
-                window.location.href = "../back/controllers/EstablecimientoController.php?accion=eliminar&id=" + encodeURIComponent(id);
-            } else if (confirmacion !== null) {
-                alert("Palabra incorrecta. No se eliminó el establecimiento.");
+                                        <button type="button" class="btn btn-sm btn-secondary dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown" aria-expanded="false">
+                                            ⚙️
+                                        </button>
+
+                                        <ul class="dropdown-menu shadow">
+                                            <li>
+                                                <a class="dropdown-item" href="editar_establecimiento.php?id=<?php echo urlencode($est['id']); ?>">✏️ Editar</a>
+                                            </li>
+                                            <li>
+                                                <hr class="dropdown-divider">
+                                            </li>
+                                            <li>
+                                                <button class="dropdown-item text-danger" onclick="confirmarBorrado(<?php echo (int)$est['id']; ?>, '<?php echo addslashes(escapeHtml($est['nombre'])); ?>')">
+                                                    🗑️ Borrar
+                                                </button>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+                    <?php else: ?>
+                        <tr>
+                            <td colspan="4" class="text-center text-muted">No hay establecimientos cargados.</td>
+                        </tr>
+                    <?php endif; ?>
+                </tbody>
+            </table>
+        </div>
+        <script>
+            function confirmarBorrado(id, nombre) {
+                // Pedimos al usuario que escriba 'borrar' para confirmar [cite: 2026-01-24]
+                let confirmacion = prompt("Para eliminar el establecimiento '" + nombre + "', escriba 'borrar':");
+
+                if (confirmacion === 'borrar') {
+                    // Si escribió bien, lo mandamos al controlador [cite: 2026-01-28]
+                    window.location.href = "../back/controllers/EstablecimientoController.php?accion=eliminar&id=" + encodeURIComponent(id);
+                } else if (confirmacion !== null) {
+                    alert("Palabra incorrecta. No se eliminó el establecimiento.");
+                }
             }
-        }
-    </script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+        </script>
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 
 </html>
