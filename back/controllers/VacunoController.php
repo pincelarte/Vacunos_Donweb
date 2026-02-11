@@ -48,6 +48,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($accion === 'editar') {
         $id_vaca = filter_var($_POST['id_vaca'], FILTER_VALIDATE_INT);
         $peso = (float)$_POST['peso'];
+        $historial = sanitizeInput($_POST['historial'] ?? '');
         $cantidad = (int)$_POST['cantidad_edad'];
         $unidad = $_POST['unidad_edad'] ?? 'months';
 
@@ -56,6 +57,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $nueva_fecha_inicio = $fecha_ref->format('Y-m-d');
 
         $vaca = new Vacuno("", "", "", $nueva_fecha_inicio, $peso, $id_est);
+        $vaca->setHistorial($historial);  // Agregar el historial
         if ($vaca->actualizar($id_vaca)) {
             safeRedirectVerVacas($id_est, 'exito', 'editado');
         }

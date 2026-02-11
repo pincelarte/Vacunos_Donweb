@@ -24,8 +24,13 @@ if (!$pesaje) {
     exit();
 }
 
-// Obtener id_vaca a partir de la caravana (más confiable que la columna id_vaca en pesajes)
-$id_vaca = Vacuno::obtenerIdPorCaravana($pesaje['caravana_vacuno']);
+// Obtener id_vaca directamente del pesaje (más confiable)
+$id_vaca = $pesaje['id_vaca'] ?? null;
+
+// Fallback: si id_vaca está vacío, buscar por caravana (retrocompatibilidad)
+if (empty($id_vaca)) {
+    $id_vaca = Vacuno::obtenerIdPorCaravana($pesaje['caravana_vacuno']);
+}
 
 function escapeHtml($data)
 {
@@ -37,15 +42,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $nuevo_peso = $_POST['nuevo_peso'] ?? null;
 
     if ($nuevo_peso !== null && is_numeric($nuevo_peso)) {
+        // Primero actualizar el pesaje
         if (Pesaje::corregir($id_pesaje, $nuevo_peso)) {
-            // Actualizar también el peso_actual del vacuno
+            // Luego actualizar el peso_actual del vacuno si tenemos id_vaca
+            $actualizo_vacuno = true;
             if ($id_vaca) {
-                Vacuno::actualizarPesoSimple($id_vaca, $nuevo_peso);
+                $actualizo_vacuno = Vacuno::actualizarPesoSimple($id_vaca, $nuevo_peso);
             }
-            header("Location: historial_vaca.php?id=" . ($id_vaca ?: '') . "&exito=editado");
-            exit();
+
+            if ($actualizo_vacuno) {
+                header("Location: historial_vaca.php?id=" . ($id_vaca ?: '') . "&exito=editado");
+                exit();
+            } else {
+                $error = "Se actualizó el pesaje pero no el peso de la vaca (ID: $id_vaca). Verifica que la vaca exista.";
+            }
         } else {
-            $error = "No se pudo guardar el cambio.";
+            $error = "No se pudo guardar el pesaje. Error en base de datos.";
         }
     } else {
         $error = "El peso debe ser un número válido.";

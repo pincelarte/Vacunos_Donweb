@@ -54,6 +54,11 @@ $meses_totales = ($dif->y * 12) + $dif->m;
                     <input type="hidden" name="id_establecimiento" value="<?php echo $vaca['id_establecimiento']; ?>">
 
                     <div class="mb-3">
+                        <label>Peso Actual (kg):</label>
+                        <input type="number" name="peso" class="form-control" step="0.1" value="<?php echo htmlspecialchars($vaca['peso_actual']); ?>" required>
+                    </div>
+
+                    <div class="mb-3">
                         <label>Historial / Observaciones:</label>
                         <textarea name="historial" class="form-control" rows="4"><?php echo htmlspecialchars($vaca['historial']); ?></textarea>
                     </div>

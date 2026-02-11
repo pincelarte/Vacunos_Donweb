@@ -126,4 +126,10 @@ class Vacuno
         $resultado = $stmt->fetch(PDO::FETCH_ASSOC);
         return $resultado ? $resultado['id'] : null;
     }
+
+    // Setter para historial
+    public function setHistorial($historial)
+    {
+        $this->historial = $historial;
+    }
 }
