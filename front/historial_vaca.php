@@ -8,15 +8,25 @@ if (!isset($_SESSION['usuario'])) {
 require_once __DIR__ . '/../back/models/Vacuno.php';
 require_once __DIR__ . '/../back/models/Pesaje.php';
 
-$caravana = $_GET['caravana'] ?? null;
+// CAMBIO: Ahora usamos el ID numérico del animal [cite: 2026-01-24]
+$id_vaca = $_GET['id'] ?? null;
 
-if (!$caravana) {
-    echo "Falta el número de caravana.";
+if (!$id_vaca) {
+    echo "Falta el identificador del animal.";
     exit();
 }
 
-$vaca = Vacuno::obtenerPorCaravana($caravana);
-$historial = Pesaje::obtenerHistorial($caravana);
+// CAMBIO: Buscamos al animal por su ID único
+$vaca = Vacuno::obtenerPorId($id_vaca);
+
+if (!$vaca) {
+    echo "Vaca no encontrada.";
+    exit();
+}
+
+// Obtenemos la caravana para los pesajes
+$caravana = $vaca['caravana'];
+$historial = Pesaje::obtenerHistorial($id_vaca);
 
 function escapeHtml($data)
 {
@@ -52,7 +62,9 @@ function escapeHtml($data)
             <div class="card card-body shadow-sm">
                 <form action="../back/controllers/VacunoController.php" method="POST" class="row g-3 align-items-end">
                     <input type="hidden" name="accion" value="registrar_pesaje_produccion">
+
                     <input type="hidden" name="caravana" value="<?php echo escapeHtml($caravana); ?>">
+                    <input type="hidden" name="id_vaca" value="<?php echo $id_vaca; ?>">
                     <input type="hidden" name="id_establecimiento" value="<?php echo $vaca['id_establecimiento']; ?>">
 
                     <div class="col-md-4">
@@ -101,13 +113,11 @@ function escapeHtml($data)
                                         <?php
                                         $ultimoPeso = null;
                                         $historialReversed = array_reverse($historial);
-                                        $totalPesajes = count($historialReversed);
                                         $indice = 0;
-                                        // Usamos array_reverse para calcular la diferencia del más viejo al más nuevo
                                         foreach ($historialReversed as $p):
                                             $dif = ($ultimoPeso !== null) ? ($p['peso'] - $ultimoPeso) : 0;
                                             $colorDif = ($dif > 0) ? 'text-success' : 'text-danger';
-                                            $esOriginal = ($indice === 0); // El primer elemento (más viejo) es el original
+                                            $esOriginal = ($indice === 0);
                                         ?>
                                             <tr>
                                                 <td><?php echo date('d/m/Y H:i', strtotime($p['fecha_pesaje'])); ?></td>
@@ -120,7 +130,7 @@ function escapeHtml($data)
                                                         <a href="editar_pesaje.php?id=<?php echo $p['id']; ?>" class="btn btn-sm btn-outline-warning flex-grow-1 text-nowrap">Editar</a>
 
                                                         <?php if (!$esOriginal): ?>
-                                                            <a href="../back/controllers/VacunoController.php?accion=eliminar_pesaje&id_pesaje=<?php echo $p['id']; ?>&caravana=<?php echo $caravana; ?>"
+                                                            <a href="../back/controllers/VacunoController.php?accion=eliminar_pesaje&id_pesaje=<?php echo $p['id']; ?>&id_vaca=<?php echo $id_vaca; ?>"
                                                                 class="btn btn-sm btn-outline-danger flex-grow-1 text-nowrap"
                                                                 onclick="return confirm('¿Estás seguro de eliminar este registro de peso?')">
                                                                 Borrar

@@ -34,4 +34,14 @@ class Usuario
 
         return $stmt->execute([$nombre, $passwordHash]);
     }
+
+    // 3. MÉTODO PARA OBTENER ID POR NOMBRE DE USUARIO
+    public function obtenerId($nombre_usuario)
+    {
+        $con = $this->db->conectar();
+        $sql = "SELECT id FROM usuarios WHERE nombre_usuario = ?";
+        $stmt = $con->prepare($sql);
+        $stmt->execute([$nombre_usuario]);
+        return $stmt->fetchColumn();
+    }
 }

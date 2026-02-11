@@ -7,9 +7,10 @@ if (!isset($_SESSION['usuario'])) {
 
 require_once __DIR__ . '/../back/models/Vacuno.php';
 
-// Atrapamos la caravana que viene por la URL
-$caravana = $_GET['caravana'] ?? null;
-$vaca = Vacuno::obtenerPorCaravana($caravana);
+// CAMBIO: Atrapamos el ID numérico que viene por la URL en lugar de la caravana
+$id_vaca = $_GET['id'] ?? null;
+// CAMBIO: Usamos el nuevo método del modelo que busca por ID único [cite: 2026-01-24]
+$vaca = Vacuno::obtenerPorId($id_vaca);
 
 if (!$vaca) {
     echo "Vaca no encontrada.";
@@ -47,7 +48,9 @@ $meses_totales = ($dif->y * 12) + $dif->m;
             <div class="card-body">
                 <form action="../back/controllers/VacunoController.php" method="POST">
                     <input type="hidden" name="accion" value="editar">
-                    <input type="hidden" name="caravana_original" value="<?php echo htmlspecialchars($vaca['caravana']); ?>">
+
+                    <input type="hidden" name="id_vaca" value="<?php echo $vaca['id']; ?>">
+
                     <input type="hidden" name="id_establecimiento" value="<?php echo $vaca['id_establecimiento']; ?>">
 
                     <div class="mb-3">

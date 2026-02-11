@@ -6,35 +6,42 @@ class Vacuno
     protected string $tipo;
     protected string $caravana;
     protected string $raza;
-    // CAMBIO: Ahora es 'string' porque recibe una fecha (AAAA-MM-DD) [cite: 2026-01-28]
     protected string $edad;
     protected float $peso;
     protected int $id_establecimiento;
     protected string $historial;
     private $db;
+    // Agregamos esta propiedad para guardar la conexión activa
+    private $con_activa;
 
     public function __construct($tipo, $caravana, $raza, $edad, $peso, $id_establecimiento)
     {
         $this->tipo = $tipo;
         $this->caravana = $caravana;
         $this->raza = $raza;
-        $this->edad = $edad; // Aquí llega la fecha calculada del controlador
+        $this->edad = $edad;
         $this->peso = $peso;
         $this->id_establecimiento = $id_establecimiento;
         $this->historial = "";
         $this->db = new Conexion();
     }
 
+    // Traduciendo: Obtener el último ID generado por la base de datos
+    public function getUltimoId()
+    {
+        // El comando lastInsertId() devuelve el ID de la última fila insertada
+        return $this->con_activa->lastInsertId();
+    }
+
     public function insertar()
     {
-        $con = $this->db->conectar();
+        // Guardamos la conexión en la propiedad para poder pedirle el ID después
+        $this->con_activa = $this->db->conectar();
 
-        // El comando INSERT se mantiene igual, pero el valor de :edad será la fecha [cite: 2026-01-28]
         $sql = "INSERT INTO vacunos (caravana, tipo, raza, edad, id_establecimiento, peso_actual, historial) 
                 VALUES (:caravana, :tipo, :raza, :edad, :id_est, :peso, :historial)";
 
-        $stmt = $con->prepare($sql);
-
+        $stmt = $this->con_activa->prepare($sql);
         $stmt->bindParam(':caravana', $this->caravana);
         $stmt->bindParam(':tipo', $this->tipo);
         $stmt->bindParam(':raza', $this->raza);
@@ -43,21 +50,7 @@ class Vacuno
         $stmt->bindParam(':peso', $this->peso);
         $stmt->bindParam(':historial', $this->historial);
 
-        if ($stmt->execute()) {
-            return true; // Simplificado para que el controlador lo entienda mejor
-        } else {
-            return false;
-        }
-    }
-
-    public static function getTipos()
-    {
-        return ['Vaca', 'Toro', 'Ternero', 'Ternera', 'Vaquillona', 'Novillo'];
-    }
-
-    public static function getRazas()
-    {
-        return ['Holando Argentino', 'Aberdeen Angus', 'Hereford', 'Jersey'];
+        return $stmt->execute();
     }
 
     public static function listarPorEstablecimiento($id_est)
@@ -70,55 +63,67 @@ class Vacuno
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    public static function obtenerPorCaravana($caravana)
+    public static function obtenerPorId($id)
     {
         $conexion = new Conexion();
         $con = $conexion->conectar();
-        $sql = "SELECT * FROM vacunos WHERE caravana = ?";
+        $sql = "SELECT * FROM vacunos WHERE id = ?";
         $stmt = $con->prepare($sql);
-        $stmt->execute([$caravana]);
+        $stmt->execute([$id]);
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
-    public function actualizar($caravana_id)
+    public function actualizar($id)
     {
         $con = $this->db->conectar();
-        // Mantenemos tu lógica de UPDATE [cite: 2026-01-28]
-        $sql = "UPDATE vacunos SET edad = ?, peso_actual = ?, historial = ? WHERE caravana = ?";
+        $sql = "UPDATE vacunos SET edad = ?, peso_actual = ?, historial = ? WHERE id = ?";
         $stmt = $con->prepare($sql);
-        return $stmt->execute([$this->edad, $this->peso, $this->historial, $caravana_id]);
+        return $stmt->execute([$this->edad, $this->peso, $this->historial, $id]);
     }
 
-    /**
-     * Actualiza solo el peso actual de un vacuno (usado para registrar pesajes)
-     */
-    public function actualizarPeso($caravana_id)
+    public function actualizarPeso($id)
     {
         $con = $this->db->conectar();
-        $sql = "UPDATE vacunos SET peso_actual = ? WHERE caravana = ?";
+        $sql = "UPDATE vacunos SET peso_actual = ? WHERE id = ?";
         $stmt = $con->prepare($sql);
-        return $stmt->execute([$this->peso, $caravana_id]);
+        return $stmt->execute([$this->peso, $id]);
     }
 
-    public function actualizarHistorial($texto)
-    {
-        $this->historial = $texto;
-    }
-
-    public static function eliminar($caravana)
+    public static function eliminar($id)
     {
         $db = (new Conexion())->conectar();
-        $stmt = $db->prepare("DELETE FROM vacunos WHERE caravana = :caravana");
-        $stmt->bindParam(':caravana', $caravana);
+        $stmt = $db->prepare("DELETE FROM vacunos WHERE id = :id");
+        $stmt->bindParam(':id', $id);
         return $stmt->execute();
     }
 
-    public static function existe($caravana)
+    public static function getTipos()
     {
-        $db = (new Conexion())->conectar();
-        $stmt = $db->prepare("SELECT COUNT(*) FROM vacunos WHERE caravana = :caravana");
-        $stmt->bindParam(':caravana', $caravana);
-        $stmt->execute();
-        return $stmt->fetchColumn() > 0;
+        return ['Vaca', 'Toro', 'Ternero', 'Ternera', 'Vaquillona', 'Novillo'];
+    }
+
+    public static function getRazas()
+    {
+        return ['Holando Argentino', 'Aberdeen Angus', 'Hereford', 'Jersey'];
+    }
+
+    // Método para actualizar solo el peso actual (usado desde editar_pesaje.php)
+    public static function actualizarPesoSimple($id, $nuevo_peso)
+    {
+        $con = (new Conexion())->conectar();
+        $sql = "UPDATE vacunos SET peso_actual = ? WHERE id = ?";
+        $stmt = $con->prepare($sql);
+        return $stmt->execute([$nuevo_peso, $id]);
+    }
+
+    // Método para obtener ID por caravana (usado desde editar_pesaje.php)
+    public static function obtenerIdPorCaravana($caravana)
+    {
+        $con = (new Conexion())->conectar();
+        $sql = "SELECT id FROM vacunos WHERE caravana = ?";
+        $stmt = $con->prepare($sql);
+        $stmt->execute([$caravana]);
+        $resultado = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $resultado ? $resultado['id'] : null;
     }
 }

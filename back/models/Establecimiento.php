@@ -10,50 +10,51 @@ class Establecimiento
         $this->db = new Conexion();
     }
 
-    // LISTAR: Usaba los nombres simples [cite: 2026-01-28]
-    public function listarTodo()
+    // LISTAR: Solo los establecimientos del usuario logueado
+    public function listarPorUsuario($id_usuario)
     {
         $con = $this->db->conectar();
-        $sql = "SELECT * FROM establecimientos";
-        $stmt = $con->query($sql);
+        $sql = "SELECT * FROM establecimientos WHERE id_usuario = ?";
+        $stmt = $con->prepare($sql);
+        $stmt->execute([$id_usuario]);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    // CREAR: Antes de cambiar los nombres de las columnas [cite: 2026-01-28]
-    public function crear($nombre, $ubicacion)
+    // CREAR: Agregar el id_usuario del usuario logueado
+    public function crear($nombre, $ubicacion, $id_usuario)
     {
         $con = $this->db->conectar();
         // Cambiamos 'nombre_est' por 'nombre' y 'ubicacion_est' por 'ubicacion' [cite: 2026-01-28]
-        $sql = "INSERT INTO establecimientos (nombre, ubicacion) VALUES (?, ?)";
+        $sql = "INSERT INTO establecimientos (nombre, ubicacion, id_usuario) VALUES (?, ?, ?)";
         $stmt = $con->prepare($sql);
-        return $stmt->execute([$nombre, $ubicacion]);
+        return $stmt->execute([$nombre, $ubicacion, $id_usuario]);
     }
 
-    // ACTUALIZAR: Volviendo al ID simple [cite: 2026-01-28]
-    public function actualizar($id, $nuevoNombre)
+    // ACTUALIZAR: Verificar que pertenezca al usuario
+    public function actualizarPorUsuario($id, $nuevoNombre, $id_usuario)
     {
         $con = $this->db->conectar();
-        $sql = "UPDATE establecimientos SET nombre = ? WHERE id = ?";
+        $sql = "UPDATE establecimientos SET nombre = ? WHERE id = ? AND id_usuario = ?";
         $stmt = $con->prepare($sql);
-        return $stmt->execute([$nuevoNombre, $id]);
+        return $stmt->execute([$nuevoNombre, $id, $id_usuario]);
     }
 
-    // ELIMINAR: Usando 'id' en lugar de 'id_est' [cite: 2026-01-28]
-    public function eliminar($id)
+    // ELIMINAR: Verificar que pertenezca al usuario
+    public function eliminarPorUsuario($id, $id_usuario)
     {
         $con = $this->db->conectar();
-        $sql = "DELETE FROM establecimientos WHERE id = ?";
+        $sql = "DELETE FROM establecimientos WHERE id = ? AND id_usuario = ?";
         $stmt = $con->prepare($sql);
-        return $stmt->execute([$id]);
+        return $stmt->execute([$id, $id_usuario]);
     }
 
-    // OBTENER POR ID: Indispensable para que la edición no de Error 500 [cite: 2026-01-28]
-    public function obtenerPorId($id)
+    // OBTENER POR ID: Verificar que pertenezca al usuario
+    public function obtenerPorIdYUsuario($id, $id_usuario)
     {
         $con = $this->db->conectar();
-        $sql = "SELECT * FROM establecimientos WHERE id = ?";
+        $sql = "SELECT * FROM establecimientos WHERE id = ? AND id_usuario = ?";
         $stmt = $con->prepare($sql);
-        $stmt->execute([$id]);
+        $stmt->execute([$id, $id_usuario]);
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 }

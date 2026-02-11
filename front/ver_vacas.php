@@ -34,11 +34,24 @@ if (!$id_establecimiento) {
     exit();
 }
 
-require_once __DIR__ . '/../back/models/Vacuno.php';
+// Obtener el ID del usuario logueado
+require_once __DIR__ . '/../back/models/Usuario.php';
+$modeloUsuario = new Usuario();
+$id_usuario = $modeloUsuario->obtenerId($_SESSION['usuario']);
+
 require_once __DIR__ . '/../back/models/Establecimiento.php';
+require_once __DIR__ . '/../back/models/Vacuno.php';
 
 $modeloEst = new Establecimiento();
-$datosEst = $modeloEst->obtenerPorId($id_establecimiento);
+// Verificar que el establecimiento pertenezca al usuario
+$datosEst = $modeloEst->obtenerPorIdYUsuario($id_establecimiento, $id_usuario);
+
+// Si no pertenece al usuario, redirigir
+if (!$datosEst) {
+    header("Location: gestion.php?mensaje=error");
+    exit();
+}
+
 $nombreEst = $datosEst['nombre'] ?? 'Desconocido';
 
 $listaVacas = Vacuno::listarPorEstablecimiento($id_establecimiento);
@@ -153,7 +166,6 @@ if ($error === 'duplicado') {
         <a href="gestion.php" class="btn btn-secondary mb-3">Volver a Gestión</a>
         <hr>
 
-        <!-- Don Silicio móvil: solo burbuja -->
         <div class="contenedor-asistente d-block d-md-none">
             <div class="burbuja-silicio">
                 <b>Don Silicio dice:</b><br>
@@ -235,11 +247,11 @@ if ($error === 'duplicado') {
                     <?php else: ?>
                         <?php foreach ($listaVacas as $vaca): ?>
                             <?php
-                            // Lógica de cálculo de edad
+                            // Lógica de cálculo de edad corregida con días [cite: 2026-01-31]
                             $fecha_nac = new DateTime($vaca['edad']);
                             $hoy = new DateTime();
                             $dif = $hoy->diff($fecha_nac);
-                            $texto_edad = $dif->format('%y años, %m meses');
+                            $texto_edad = $dif->format('%y años, %m meses, %d días');
                             ?>
                             <tr class="align-middle">
                                 <td><?php echo escapeHtml($vaca['caravana']); ?></td>
@@ -248,7 +260,7 @@ if ($error === 'duplicado') {
                                 <td class="text-center"><?php echo $texto_edad; ?></td>
                                 <td class="text-center"><?php echo escapeHtml($vaca['peso_actual']); ?> kg</td>
                                 <td class="text-center">
-                                    <a href="historial_vaca.php?caravana=<?php echo urlencode($vaca['caravana']); ?>"
+                                    <a href="historial_vaca.php?id=<?php echo $vaca['id']; ?>"
                                         title="Ver historial de pesajes"
                                         style="text-decoration: none; font-size: 1.2rem;">
                                         🔍
@@ -256,10 +268,10 @@ if ($error === 'duplicado') {
                                 </td>
                                 <td class="text-center">
                                     <div class="d-flex justify-content-center gap-2">
-                                        <a href="editar_vaca.php?caravana=<?php echo urlencode($vaca['caravana']); ?>" class="btn btn-sm btn-warning">
+                                        <a href="editar_vaca.php?id=<?php echo $vaca['id']; ?>" class="btn btn-sm btn-warning">
                                             Editar
                                         </a>
-                                        <a href="../back/controllers/VacunoController.php?accion=eliminar&caravana=<?php echo urlencode($vaca['caravana']); ?>&id_est=<?php echo $id_establecimiento; ?>"
+                                        <a href="../back/controllers/VacunoController.php?accion=eliminar&id=<?php echo $vaca['id']; ?>&id_est=<?php echo $id_establecimiento; ?>"
                                             class="btn btn-sm btn-danger"
                                             onclick="return confirm('¿Seguro que quiere sacar este animal del sistema?')">
                                             Eliminar
@@ -274,7 +286,6 @@ if ($error === 'duplicado') {
         </div>
     </div>
 
-    <!-- Don Silicio desktop: imagen + burbuja -->
     <div class="contenedor-asistente d-none d-md-flex">
         <div class="burbuja-silicio">
             <b>Don Silicio dice:</b><br>

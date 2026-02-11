@@ -2,6 +2,23 @@
 require_once __DIR__ . '/../models/Establecimiento.php';
 $modelo = new Establecimiento();
 
+// Obtener ID del usuario logueado
+session_start();
+$id_usuario = $_SESSION['id_usuario'] ?? null;
+
+// Si no hay usuario logueado, redirigir al login
+if (!$id_usuario && !isset($_SESSION['usuario'])) {
+    header("Location: ../../front/index.php?error=no_auth");
+    exit();
+}
+
+// Si tenemos el nombre pero no el ID, obtenerlo del modelo Usuario
+if (!$id_usuario && isset($_SESSION['usuario'])) {
+    require_once __DIR__ . '/../models/Usuario.php';
+    $modeloUsuario = new Usuario();
+    $id_usuario = $modeloUsuario->obtenerId($_SESSION['usuario']);
+}
+
 /**
  * Función helper para sanitizar entradas y prevenir XSS
  */
@@ -53,7 +70,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             safeRedirect('error');
         }
 
-        if ($modelo->crear($nombre, $ubicacion)) {
+        if ($modelo->crear($nombre, $ubicacion, $id_usuario)) {
             safeRedirect('ok');
         } else {
             safeRedirect('error');
@@ -71,7 +88,11 @@ if (isset($_GET['accion']) && $_GET['accion'] === 'eliminar') {
 
     $id = (int)$_GET['id'];
 
-    if ($modelo->eliminar($id)) {
+    if (!$id_usuario) {
+        safeRedirect('error');
+    }
+
+    if ($modelo->eliminarPorUsuario($id, $id_usuario)) {
         safeRedirect('eliminado');
     } else {
         safeRedirect('error');
@@ -99,7 +120,7 @@ if (isset($_POST['accion']) && $_POST['accion'] == 'actualizar') {
     }
 
     // 2. Le pedimos al modelo (el cocinero) que haga el trabajo [cite: 2026-01-28]
-    if ($modelo->actualizar($id, $nuevoNombre)) {
+    if ($modelo->actualizarPorUsuario($id, $nuevoNombre, $id_usuario)) {
         // 3. Si salió bien, volvemos a la gestión con un mensaje de éxito [cite: 2026-01-28]
         safeRedirect('ok');
     } else {

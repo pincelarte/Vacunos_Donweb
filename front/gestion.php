@@ -28,10 +28,15 @@ function escapeHtml($data)
     return htmlspecialchars($data ?? '', ENT_QUOTES, 'UTF-8');
 }
 
-// 1. Llamamos al modelo para traer los datos [cite: 2026-01-28]
+// 1. Obtener el ID del usuario logueado
+require_once __DIR__ . '/../back/models/Usuario.php';
+$modeloUsuario = new Usuario();
+$id_usuario = $modeloUsuario->obtenerId($_SESSION['usuario']);
+
+// 2. Llamamos al modelo para traer los establecimientos del usuario
 require_once __DIR__ . '/../back/models/Establecimiento.php';
 $modelo = new Establecimiento();
-$listaEstablecimientos = $modelo->listarTodo();
+$listaEstablecimientos = $modelo->listarPorUsuario($id_usuario);
 
 // Manejo seguro de mensajes con lista blanca
 $mensajesValidos = ['ok', 'error', 'eliminado', 'actualizado'];

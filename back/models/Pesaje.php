@@ -10,48 +10,32 @@ class Pesaje
         $this->db = new Conexion();
     }
 
-    /**
-     * Comando: INSERT (Insertar).
-     * Registra un nuevo peso asociado a una caravana.
-     */
-    public function registrar($caravana, $peso)
+    // Traduciendo: Registrar ahora usa el ID numérico de la vaca [cite: 2026-01-24]
+    public function registrar($id_vaca, $caravana, $peso)
     {
         $con = $this->db->conectar();
-
-        $sql = "INSERT INTO pesajes (caravana_vacuno, peso) VALUES (:caravana, :peso)";
-
+        // Guardamos el ID de la vaca (para que no se mezcle) y la caravana (por referencia)
+        $sql = "INSERT INTO pesajes (id_vaca, caravana_vacuno, peso) VALUES (:id_vaca, :caravana, :peso)";
         $stmt = $con->prepare($sql);
-
-        // Vinculamos los datos para que sean seguros
+        $stmt->bindParam(':id_vaca', $id_vaca);
         $stmt->bindParam(':caravana', $caravana);
         $stmt->bindParam(':peso', $peso);
-
         return $stmt->execute();
     }
 
-    /**
-     * Comando: SELECT (Seleccionar). 
-     * Trae el ID, el peso y la fecha. El ID es vital para poder borrar o editar después.
-     */
-    public static function obtenerHistorial($caravana)
+    // Traduciendo: Traer historial buscando por el ID único del animal
+    public static function obtenerHistorial($id_vaca)
     {
         $conexion = new Conexion();
         $con = $conexion->conectar();
-
-        // IMPORTANTE: Agregamos 'id' a la consulta. Sin esto no podemos identificar qué pesaje borrar.
-        $sql = "SELECT id, peso, fecha_pesaje FROM pesajes WHERE caravana_vacuno = ? ORDER BY fecha_pesaje DESC";
-
+        // Cambiamos el WHERE para que use id_vaca en lugar del texto de caravana
+        $sql = "SELECT id, peso, fecha_pesaje FROM pesajes WHERE id_vaca = ? ORDER BY fecha_pesaje DESC";
         $stmt = $con->prepare($sql);
-        $stmt->execute([$caravana]);
-
-        // Retornamos todos los registros como un array asociativo
+        $stmt->execute([$id_vaca]);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    /**
-     * Comando: DELETE (Borrar).
-     * Borra un registro de pesaje específico usando su ID único.
-     */
+    // El comando DELETE se mantiene igual porque el ID de pesaje ya es único
     public static function eliminar($id_pesaje)
     {
         $db = (new Conexion())->conectar();
@@ -60,15 +44,22 @@ class Pesaje
         return $stmt->execute([$id_pesaje]);
     }
 
-    /**
-     * Comando: UPDATE (Actualizar).
-     * Cambia el valor del peso de un registro ya existente.
-     */
+    // El comando UPDATE para corregir pesajes
     public static function corregir($id_pesaje, $nuevo_valor)
     {
         $db = (new Conexion())->conectar();
         $sql = "UPDATE pesajes SET peso = ? WHERE id = ?";
         $stmt = $db->prepare($sql);
         return $stmt->execute([$nuevo_valor, $id_pesaje]);
+    }
+
+    // Obtener un pesaje por su ID
+    public static function obtenerPorId($id_pesaje)
+    {
+        $db = (new Conexion())->conectar();
+        $sql = "SELECT * FROM pesajes WHERE id = ?";
+        $stmt = $db->prepare($sql);
+        $stmt->execute([$id_pesaje]);
+        return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 }

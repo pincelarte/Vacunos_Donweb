@@ -14,6 +14,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (password_verify($password, $usuarioEncontrado['password'])) {
 
             $_SESSION['usuario'] = $usuarioEncontrado['nombre_usuario'];
+            $_SESSION['id_usuario'] = $usuarioEncontrado['id'];
 
             // Redirigimos a la gestión de vacas
             header("Location: ../../front/gestion.php");

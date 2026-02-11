@@ -19,23 +19,25 @@ function safeRedirectVerVacas($id_est, $tipo, $valor = null)
     exit();
 }
 
+// --- CAMBIO: ELIMINAR VACA POR ID ---
 if (isset($_GET['accion']) && $_GET['accion'] == 'eliminar') {
-    $caravana = sanitizeInput($_GET['caravana']);
+    $id_vaca = filter_var($_GET['id'], FILTER_VALIDATE_INT);
     $id_est = filter_var($_GET['id_est'], FILTER_VALIDATE_INT);
-    if (Vacuno::eliminar($caravana)) {
+    if (Vacuno::eliminar($id_vaca)) {
         safeRedirectVerVacas($id_est, 'exito', 'eliminado');
     }
     exit();
 }
 
+// --- SE MANTIENE: ELIMINAR PESAJE ---
 if (isset($_GET['accion']) && $_GET['accion'] == 'eliminar_pesaje') {
     $id_pesaje = filter_var($_GET['id_pesaje'], FILTER_VALIDATE_INT);
-    $caravana = sanitizeInput($_GET['caravana']);
+    $id_vaca = filter_var($_GET['id_vaca'], FILTER_VALIDATE_INT);
     if ($id_pesaje && Pesaje::eliminar($id_pesaje)) {
-        header("Location: ../../front/historial_vaca.php?caravana=" . $caravana);
+        header("Location: ../../front/historial_vaca.php?id=" . $id_vaca);
         exit();
     }
-    header("Location: ../../front/historial_vaca.php?caravana=" . $caravana . "&error=1");
+    header("Location: ../../front/historial_vaca.php?id=" . $id_vaca . "&error=1");
     exit();
 }
 
@@ -44,7 +46,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $id_est = filter_var($_POST['id_establecimiento'], FILTER_VALIDATE_INT);
 
     if ($accion === 'editar') {
-        $caravana_original = sanitizeInput($_POST['caravana_original']);
+        $id_vaca = filter_var($_POST['id_vaca'], FILTER_VALIDATE_INT);
         $peso = (float)$_POST['peso'];
         $cantidad = (int)$_POST['cantidad_edad'];
         $unidad = $_POST['unidad_edad'] ?? 'months';
@@ -53,20 +55,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $fecha_ref->modify("-$cantidad $unidad");
         $nueva_fecha_inicio = $fecha_ref->format('Y-m-d');
 
-        $vaca = new Vacuno("", $caravana_original, "", $nueva_fecha_inicio, $peso, $id_est);
-        if ($vaca->actualizar($caravana_original)) {
+        $vaca = new Vacuno("", "", "", $nueva_fecha_inicio, $peso, $id_est);
+        if ($vaca->actualizar($id_vaca)) {
             safeRedirectVerVacas($id_est, 'exito', 'editado');
         }
     } elseif ($accion === 'registrar_pesaje_produccion') {
-        // --- NUEVA ACCIÓN INDEPENDIENTE ---
+        // --- REGISTRAR PESAJE: Ahora enviamos el id_vaca ---
         $caravana = sanitizeInput($_POST['caravana']);
+        $id_vaca = filter_var($_POST['id_vaca'], FILTER_VALIDATE_INT);
         $nuevo_peso = (float)$_POST['nuevo_peso'];
 
         $p = new Pesaje();
-        if ($p->registrar($caravana, $nuevo_peso)) {
+        // Traduciendo: Pasamos el ID único para que no se mezclen los datos [cite: 2026-01-24]
+        if ($p->registrar($id_vaca, $caravana, $nuevo_peso)) {
             $vaca = new Vacuno("", $caravana, "", "", $nuevo_peso, $id_est);
-            $vaca->actualizarPeso($caravana);
-            header("Location: ../../front/historial_vaca.php?caravana=" . $caravana);
+            $vaca->actualizarPeso($id_vaca);
+            header("Location: ../../front/historial_vaca.php?id=" . $id_vaca);
             exit();
         }
     } else {
@@ -76,26 +80,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $tipo = sanitizeInput($_POST['tipo']);
         $raza = sanitizeInput($_POST['raza'] ?? '');
 
-        // Validar longitud máxima de caravan (8 caracteres)
         if (strlen($caravana) > 8) {
             safeRedirectVerVacas($id_est, 'error', 'caravana_larga');
         }
 
-        if (Vacuno::existe($caravana)) {
-            safeRedirectVerVacas($id_est, 'error', 'duplicado');
-        } else {
-            $cantidad = (int)($_POST['cantidad_edad'] ?? 0);
-            $unidad = $_POST['unidad_edad'] ?? 'months';
-            $fecha_ref = new DateTime();
-            $fecha_ref->modify("-$cantidad $unidad");
-            $fecha_inicio = $fecha_ref->format('Y-m-d');
+        $cantidad = (int)($_POST['cantidad_edad'] ?? 0);
+        $unidad = $_POST['unidad_edad'] ?? 'months';
+        $fecha_ref = new DateTime();
+        $fecha_ref->modify("-$cantidad $unidad");
+        $fecha_inicio = $fecha_ref->format('Y-m-d');
 
-            $vaca = new Vacuno($tipo, $caravana, $raza, $fecha_inicio, $peso, $id_est);
-            if ($vaca->insertar()) {
-                $p = new Pesaje();
-                $p->registrar($caravana, $peso);
-                safeRedirectVerVacas($id_est, 'exito', 'creado');
-            }
+        $vaca = new Vacuno($tipo, $caravana, $raza, $fecha_inicio, $peso, $id_est);
+
+        // Al insertar una vaca nueva, también vinculamos su primer pesaje por ID
+        if ($vaca->insertar()) {
+            $id_vaca_nueva = $vaca->getUltimoId(); // Necesitás esta función en tu modelo Vacuno
+            $p = new Pesaje();
+            $p->registrar($id_vaca_nueva, $caravana, $peso);
+            safeRedirectVerVacas($id_est, 'exito', 'creado');
         }
     }
 }
