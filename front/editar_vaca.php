@@ -59,12 +59,7 @@ $meses_totales = ($dif->y * 12) + $dif->m;
                     </div>
 
                     <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label>Peso Actual (kg):</label>
-                            <input type="number" step="0.01" name="peso" class="form-control" value="<?php echo $vaca['peso_actual']; ?>">
-                        </div>
-
-                        <div class="col-md-6 mb-3">
+                        <div class="col-md-12 mb-3">
                             <label>Edad (Ajustar si es necesario):</label>
                             <div class="input-group">
                                 <input type="number" name="cantidad_edad" class="form-control" value="<?php echo $meses_totales; ?>">
